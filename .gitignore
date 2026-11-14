@@ -1,0 +1,48 @@
+# Build artifacts (compiled binaries)
+run-remote-steps
+/hash-to-words
+# Built on demand by lib.WriteRecoveryScript (go build ./cmd/recovery), which
+# removes any existing copy first -- so a committed one is never used.
+/recovery
+
+# IDE and editor files
+.claude/
+
+# ISO files and cloud VM images
+*.iso.*
+*.qcow2
+
+# API keys and secrets (NEVER commit these!)
+.env
+*.key
+
+# Test artifacts
+*.log
+log/
+
+# Batch conversion tools - intermediate/temporary files
+# These can be regenerated or re-downloaded
+# Active files (one per type) - archived to archive/batch/ when replaced
+tools/batch-requests.jsonl
+tools/batch-requests-customize.jsonl
+tools/batch-results.jsonl
+tools/batch-results-customize.jsonl
+tools/conversions.patch
+tools/.magit-diff-backup/
+
+# Note: archive/batch/ contains timestamped archives of old batch files
+# These are tracked in git for reference but can be cleaned up if needed
+
+# Note: tools/converted-scripts/ IS tracked - these are the actual converted code
+# that we review, test, and potentially integrate into the codebase
+
+# Oracle: the SSH public key baked into the OCI image is per-user.
+# Copy authorized-key.pub.example and drop your own key in.
+oracle/image/authorized-key.pub
+
+# Disposable Oracle validation state, snapshots, and ephemeral SSH keys.
+.oracle-validation/
+
+# Ephemeral test configs
+postinstall/tests/test-work.scm
+

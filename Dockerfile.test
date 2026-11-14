@@ -1,0 +1,39 @@
+# Test environment for guix-platform-install
+# This simulates a minimal Linux environment for testing installer logic
+
+FROM golang:1.23-alpine
+
+# Install basic tools needed for testing
+RUN apk add --no-cache \
+    bash \
+    coreutils \
+    util-linux \
+    e2fsprogs \
+    dosfstools \
+    parted \
+    curl \
+    git \
+    findutils \
+    grep \
+    sed \
+    guile \
+    guile-dev
+
+# Create test directory
+WORKDIR /workspace
+
+# Copy go.mod first for better caching
+COPY go.mod ./
+
+# Download dependencies (go.sum will be created if it doesn't exist)
+RUN go mod download
+
+# Copy the entire project
+COPY . .
+
+# Set up environment
+ENV GOCACHE=/tmp/go-cache
+ENV GOTMPDIR=/tmp/go-tmp
+
+# Run tests by default
+CMD ["./run-tests.sh"]

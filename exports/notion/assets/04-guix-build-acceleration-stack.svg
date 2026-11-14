@@ -1,0 +1,222 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1050" width="1600" height="1050">
+  <defs>
+    <!-- Blueprint subtle grid -->
+    <pattern id="smallGrid" width="20" height="20" patternUnits="userSpaceOnUse">
+      <path d="M 20 0 L 0 0 0 20" fill="none" stroke="#232738" stroke-width="0.6" stroke-opacity="0.55"/>
+    </pattern>
+    <pattern id="largeGrid" width="100" height="100" patternUnits="userSpaceOnUse">
+      <rect width="100" height="100" fill="url(#smallGrid)"/>
+      <path d="M 100 0 L 0 0 0 100" fill="none" stroke="#2f3549" stroke-width="1" stroke-opacity="0.65"/>
+    </pattern>
+
+    <!-- Soft drop shadow -->
+    <filter id="shadow" x="-6%" y="-6%" width="112%" height="116%">
+      <feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#0a0b10" flood-opacity="0.65"/>
+    </filter>
+    <filter id="shadowSm" x="-6%" y="-6%" width="112%" height="116%">
+      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0a0b10" flood-opacity="0.5"/>
+    </filter>
+
+    <!-- Header gradient -->
+    <linearGradient id="headerGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#1f2335"/>
+      <stop offset="50%" stop-color="#24283b"/>
+      <stop offset="100%" stop-color="#1f2335"/>
+    </linearGradient>
+
+    <!-- Arrow markers for each accent color -->
+    <marker id="arrow-blue" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 1.5 L 9 5 L 0 8.5 z" fill="#7aa2f7"/>
+    </marker>
+    <marker id="arrow-cyan" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 1.5 L 9 5 L 0 8.5 z" fill="#7dcfff"/>
+    </marker>
+    <marker id="arrow-green" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 1.5 L 9 5 L 0 8.5 z" fill="#9ece6a"/>
+    </marker>
+    <marker id="arrow-magenta" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 1.5 L 9 5 L 0 8.5 z" fill="#bb9af7"/>
+    </marker>
+    <marker id="arrow-amber" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 1.5 L 9 5 L 0 8.5 z" fill="#e0af68"/>
+    </marker>
+    <marker id="arrow-orange" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 1.5 L 9 5 L 0 8.5 z" fill="#ff9e64"/>
+    </marker>
+    <marker id="arrow-red" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 1.5 L 9 5 L 0 8.5 z" fill="#f7768e"/>
+    </marker>
+    <marker id="arrow-fg" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 1.5 L 9 5 L 0 8.5 z" fill="#a9b1d6"/>
+    </marker>
+  </defs>
+
+  <!-- Canvas Background -->
+  <rect width="1600" height="1050" fill="#1a1b26"/>
+  <rect width="1600" height="1050" fill="url(#largeGrid)"/>
+
+  <!-- Outer Frame -->
+  <rect x="12" y="12" width="1576" height="1026" rx="12" fill="none" stroke="#414868" stroke-width="1.5"/>
+
+  <!-- Top Title Banner -->
+  <rect x="24" y="22" width="1552" height="74" rx="10" fill="url(#headerGrad)" stroke="#414868" stroke-width="1.5" filter="url(#shadowSm)"/>
+  <rect x="24" y="22" width="8" height="74" rx="4" fill="#7aa2f7"/>
+  <text x="48" y="53" font-family="'Avenir Next', 'Helvetica Neue', -apple-system, BlinkMacSystemFont, sans-serif" font-size="22" font-weight="800" fill="#ffffff" letter-spacing="0.8">THE 7-LAYER GUIX BUILD SPEED ARCHITECTURE</text>
+  <text x="48" y="79" font-family="'Avenir Next', 'Helvetica Neue', -apple-system, BlinkMacSystemFont, sans-serif" font-size="13.5" font-weight="500" fill="#7dcfff" letter-spacing="0.3">Short-Circuit Resolution Waterfall — From 0 ms Profile Locks &amp; LAN Substitutes to Distributed Offload &amp; SIMD Tuning</text>
+
+  <!-- Top-Right Tag Pill -->
+  <rect x="1270" y="36" width="290" height="30" rx="6" fill="#16161e" stroke="#414868" stroke-width="1"/>
+  <text x="1415" y="56" text-anchor="middle" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="11.5" font-weight="700" fill="#bb9af7">DIAGRAM 04 · 7-LAYER SPEED STACK</text>
+
+<g>
+  <rect x="24" y="112" width="1060" height="892" rx="10" fill="#1f2335" stroke="#414868" stroke-width="1.5" filter="url(#shadow)"/>
+  <rect x="24" y="112" width="1060" height="36" rx="10" fill="#16161e" stroke="#7dcfff" stroke-width="1.2"/>
+  <rect x="24" y="112" width="8" height="36" rx="4" fill="#7dcfff"/>
+  <text x="42" y="135" font-family="'Avenir Next', 'Helvetica Neue', -apple-system, BlinkMacSystemFont, sans-serif" font-size="13.5" font-weight="700" fill="#7dcfff" letter-spacing="0.4">THE 7-LAYER SUBSTITUTION &amp; BUILD WATERFALL (FIRST HIT WINS)</text>
+  <rect x="928.5" y="118" width="145.5" height="24" rx="5" fill="#24283b" stroke="#7dcfff" stroke-width="1"/>
+  <text x="1001.2" y="134" text-anchor="middle" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="10.5" font-weight="700" fill="#ffffff">SHORT-CIRCUIT DAG</text>
+</g>
+<rect x="44" y="164" width="114" height="104" rx="8" fill="#16161e" stroke="#7dcfff" stroke-width="2"/>
+<text x="101" y="196" text-anchor="middle" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="14" font-weight="800" fill="#7dcfff">LAYER 1</text>
+<rect x="54" y="208" width="94" height="24" rx="5" fill="#292e42" stroke="#7dcfff" stroke-width="1"/>
+<text x="101" y="224" text-anchor="middle" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="11" font-weight="700" fill="#ffffff">~0 ms</text>
+<text x="101" y="252" text-anchor="middle" font-family="'Avenir Next', 'Helvetica Neue', -apple-system, BlinkMacSystemFont, sans-serif" font-size="10.5" fill="#a9b1d6">Tier 1</text>
+<path d="M 101 268 L 101 280" stroke="#a9b1d6" stroke-width="2" marker-end="url(#arrow-fg)"/>
+<rect x="174" y="164" width="890" height="104" rx="8" fill="#292e42" stroke="#7dcfff" stroke-width="1.6" filter="url(#shadowSm)"/>
+<rect x="174" y="164" width="7" height="104" rx="3.5" fill="#7dcfff"/>
+<text x="196" y="190" font-family="'Avenir Next', 'Helvetica Neue', -apple-system, BlinkMacSystemFont, sans-serif" font-size="14.5" font-weight="800" fill="#7dcfff">PROFILE GENERATIONS &amp; CHANNEL LOCK</text>
+<rect x="596" y="172" width="454" height="26" rx="5" fill="#16161e" stroke="#414868" stroke-width="1"/>
+<text x="823" y="189" text-anchor="middle" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="10.8" font-weight="700" fill="#ffffff">guix time-machine -C channels-lock.scm -- ...</text>
+<text x="196" y="220" font-family="'Avenir Next', 'Helvetica Neue', -apple-system, BlinkMacSystemFont, sans-serif" font-size="12.5" fill="#c0caf5">Pins exact channel commits; reuses existing profile generation symlinks without re-evaluating package graphs.</text>
+<text x="196" y="248" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="11" font-weight="700" fill="#9ece6a">✓ CACHE / SUBSTITUTE HIT → Short-circuits compilation; unpacks directly into /gnu/store!</text>
+<rect x="44" y="282" width="114" height="104" rx="8" fill="#16161e" stroke="#9ece6a" stroke-width="2"/>
+<text x="101" y="314" text-anchor="middle" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="14" font-weight="800" fill="#9ece6a">LAYER 2</text>
+<rect x="54" y="326" width="94" height="24" rx="5" fill="#292e42" stroke="#9ece6a" stroke-width="1"/>
+<text x="101" y="342" text-anchor="middle" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="11" font-weight="700" fill="#ffffff">&lt; 5 ms</text>
+<text x="101" y="370" text-anchor="middle" font-family="'Avenir Next', 'Helvetica Neue', -apple-system, BlinkMacSystemFont, sans-serif" font-size="10.5" fill="#a9b1d6">Tier 2</text>
+<path d="M 101 386 L 101 398" stroke="#a9b1d6" stroke-width="2" marker-end="url(#arrow-fg)"/>
+<rect x="174" y="282" width="890" height="104" rx="8" fill="#292e42" stroke="#9ece6a" stroke-width="1.6" filter="url(#shadowSm)"/>
+<rect x="174" y="282" width="7" height="104" rx="3.5" fill="#9ece6a"/>
+<text x="196" y="308" font-family="'Avenir Next', 'Helvetica Neue', -apple-system, BlinkMacSystemFont, sans-serif" font-size="14.5" font-weight="800" fill="#9ece6a">LOCAL /gnu/store CACHE &amp; GC ROOTS</text>
+<rect x="596" y="290" width="454" height="26" rx="5" fill="#16161e" stroke="#414868" stroke-width="1"/>
+<text x="823" y="307" text-anchor="middle" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="10.8" font-weight="700" fill="#ffffff">/var/guix/db/db.sqlite + /var/guix/gcroots</text>
+<text x="196" y="338" font-family="'Avenir Next', 'Helvetica Neue', -apple-system, BlinkMacSystemFont, sans-serif" font-size="12.5" fill="#c0caf5">Instant SQLite ValidPaths hit on local NVMe; --gc-keep-derivations=yes &amp; --gc-keep-outputs=yes prevent eviction.</text>
+<text x="196" y="366" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="11" font-weight="700" fill="#9ece6a">✓ CACHE / SUBSTITUTE HIT → Short-circuits compilation; unpacks directly into /gnu/store!</text>
+<rect x="44" y="400" width="114" height="104" rx="8" fill="#16161e" stroke="#7aa2f7" stroke-width="2"/>
+<text x="101" y="432" text-anchor="middle" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="14" font-weight="800" fill="#7aa2f7">LAYER 3</text>
+<rect x="54" y="444" width="94" height="24" rx="5" fill="#292e42" stroke="#7aa2f7" stroke-width="1"/>
+<text x="101" y="460" text-anchor="middle" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="11" font-weight="700" fill="#ffffff">5–50 ms</text>
+<text x="101" y="488" text-anchor="middle" font-family="'Avenir Next', 'Helvetica Neue', -apple-system, BlinkMacSystemFont, sans-serif" font-size="10.5" fill="#a9b1d6">Tier 3</text>
+<path d="M 101 504 L 101 516" stroke="#a9b1d6" stroke-width="2" marker-end="url(#arrow-fg)"/>
+<rect x="174" y="400" width="890" height="104" rx="8" fill="#292e42" stroke="#7aa2f7" stroke-width="1.6" filter="url(#shadowSm)"/>
+<rect x="174" y="400" width="7" height="104" rx="3.5" fill="#7aa2f7"/>
+<text x="196" y="426" font-family="'Avenir Next', 'Helvetica Neue', -apple-system, BlinkMacSystemFont, sans-serif" font-size="14.5" font-weight="800" fill="#7aa2f7">LAN SUBSTITUTE CACHE (guix publish + GIPS)</text>
+<rect x="596" y="408" width="454" height="26" rx="5" fill="#16161e" stroke="#414868" stroke-width="1"/>
+<text x="823" y="425" text-anchor="middle" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="10.8" font-weight="700" fill="#ffffff">guix publish --compression=zstd:3 + --discover=yes</text>
+<text x="196" y="456" font-family="'Avenir Next', 'Helvetica Neue', -apple-system, BlinkMacSystemFont, sans-serif" font-size="12.5" fill="#c0caf5">Zero-config mDNS/Avahi LAN discovery streams pre-built store paths at 1–10 Gbps (or IPFS-backed GIPS P2P).</text>
+<text x="196" y="484" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="11" font-weight="700" fill="#9ece6a">✓ CACHE / SUBSTITUTE HIT → Short-circuits compilation; unpacks directly into /gnu/store!</text>
+<rect x="44" y="518" width="114" height="104" rx="8" fill="#16161e" stroke="#bb9af7" stroke-width="2"/>
+<text x="101" y="550" text-anchor="middle" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="14" font-weight="800" fill="#bb9af7">LAYER 4</text>
+<rect x="54" y="562" width="94" height="24" rx="5" fill="#292e42" stroke="#bb9af7" stroke-width="1"/>
+<text x="101" y="578" text-anchor="middle" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="11" font-weight="700" fill="#ffffff">50–500 ms</text>
+<text x="101" y="606" text-anchor="middle" font-family="'Avenir Next', 'Helvetica Neue', -apple-system, BlinkMacSystemFont, sans-serif" font-size="10.5" fill="#a9b1d6">Tier 4</text>
+<path d="M 101 622 L 101 634" stroke="#a9b1d6" stroke-width="2" marker-end="url(#arrow-fg)"/>
+<rect x="174" y="518" width="890" height="104" rx="8" fill="#292e42" stroke="#bb9af7" stroke-width="1.6" filter="url(#shadowSm)"/>
+<rect x="174" y="518" width="7" height="104" rx="3.5" fill="#bb9af7"/>
+<text x="196" y="544" font-family="'Avenir Next', 'Helvetica Neue', -apple-system, BlinkMacSystemFont, sans-serif" font-size="14.5" font-weight="800" fill="#bb9af7">CONTINENT CDN SUBSTITUTE MIRRORS</text>
+<rect x="596" y="526" width="454" height="26" rx="5" fill="#16161e" stroke="#414868" stroke-width="1"/>
+<text x="823" y="543" text-anchor="middle" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="10.8" font-weight="700" fill="#ffffff">https://bordeaux.guix.gnu.org · https://ci.guix.gnu.org</text>
+<text x="196" y="574" font-family="'Avenir Next', 'Helvetica Neue', -apple-system, BlinkMacSystemFont, sans-serif" font-size="12.5" fill="#c0caf5">Cryptographically signed nar/zstd archives fetched from Bordeaux global CDN, Berlin CI farm, &amp; Nonguix.</text>
+<text x="196" y="602" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="11" font-weight="700" fill="#9ece6a">✓ CACHE / SUBSTITUTE HIT → Short-circuits compilation; unpacks directly into /gnu/store!</text>
+<rect x="44" y="636" width="114" height="104" rx="8" fill="#16161e" stroke="#e0af68" stroke-width="2"/>
+<text x="101" y="668" text-anchor="middle" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="14" font-weight="800" fill="#e0af68">LAYER 5</text>
+<rect x="54" y="680" width="94" height="24" rx="5" fill="#292e42" stroke="#e0af68" stroke-width="1"/>
+<text x="101" y="696" text-anchor="middle" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="11" font-weight="700" fill="#ffffff">Seconds</text>
+<text x="101" y="724" text-anchor="middle" font-family="'Avenir Next', 'Helvetica Neue', -apple-system, BlinkMacSystemFont, sans-serif" font-size="10.5" fill="#a9b1d6">Tier 5</text>
+<path d="M 101 740 L 101 752" stroke="#a9b1d6" stroke-width="2" marker-end="url(#arrow-fg)"/>
+<rect x="174" y="636" width="890" height="104" rx="8" fill="#292e42" stroke="#e0af68" stroke-width="1.6" filter="url(#shadowSm)"/>
+<rect x="174" y="636" width="7" height="104" rx="3.5" fill="#e0af68"/>
+<text x="196" y="662" font-family="'Avenir Next', 'Helvetica Neue', -apple-system, BlinkMacSystemFont, sans-serif" font-size="14.5" font-weight="800" fill="#e0af68">DISTRIBUTED BUILD CLUSTER (guix offload)</text>
+<rect x="596" y="644" width="454" height="26" rx="5" fill="#16161e" stroke="#414868" stroke-width="1"/>
+<text x="823" y="661" text-anchor="middle" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="10.8" font-weight="700" fill="#ffffff">/etc/guix/machines.scm (SSH build-machine fleet)</text>
+<text x="196" y="692" font-family="'Avenir Next', 'Helvetica Neue', -apple-system, BlinkMacSystemFont, sans-serif" font-size="12.5" fill="#c0caf5">Dispatches .drv + missing inputs over SSH to high-core remote servers; streams signed build outputs back.</text>
+<text x="196" y="720" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="11" font-weight="700" fill="#e0af68">⚡ REMOTE COMPUTE HIT → Offloads heavy C++/Rust compilation to cluster nodes over SSH!</text>
+<rect x="44" y="754" width="114" height="104" rx="8" fill="#16161e" stroke="#ff9e64" stroke-width="2"/>
+<text x="101" y="786" text-anchor="middle" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="14" font-weight="800" fill="#ff9e64">LAYER 6</text>
+<rect x="54" y="798" width="94" height="24" rx="5" fill="#292e42" stroke="#ff9e64" stroke-width="1"/>
+<text x="101" y="814" text-anchor="middle" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="11" font-weight="700" fill="#ffffff">Minutes</text>
+<text x="101" y="842" text-anchor="middle" font-family="'Avenir Next', 'Helvetica Neue', -apple-system, BlinkMacSystemFont, sans-serif" font-size="10.5" fill="#a9b1d6">Tier 6</text>
+<path d="M 101 858 L 101 870" stroke="#a9b1d6" stroke-width="2" marker-end="url(#arrow-fg)"/>
+<rect x="174" y="754" width="890" height="104" rx="8" fill="#292e42" stroke="#ff9e64" stroke-width="1.6" filter="url(#shadowSm)"/>
+<rect x="174" y="754" width="7" height="104" rx="3.5" fill="#ff9e64"/>
+<text x="196" y="780" font-family="'Avenir Next', 'Helvetica Neue', -apple-system, BlinkMacSystemFont, sans-serif" font-size="14.5" font-weight="800" fill="#ff9e64">RAM tmpfs BUILD SANDBOX &amp; PARALLELISM</text>
+<rect x="596" y="762" width="454" height="26" rx="5" fill="#16161e" stroke="#414868" stroke-width="1"/>
+<text x="823" y="779" text-anchor="middle" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="10.8" font-weight="700" fill="#ffffff">/tmp on tmpfs (32–64 GB RAM) + --max-jobs=4 --cores=0</text>
+<text x="196" y="810" font-family="'Avenir Next', 'Helvetica Neue', -apple-system, BlinkMacSystemFont, sans-serif" font-size="12.5" fill="#c0caf5">Eliminates SSD write amplification during source unpack/link; saturates all CPU threads across independent .drvs.</text>
+<text x="196" y="838" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="11" font-weight="700" fill="#ff9e64">⚙ LOCAL BARE-METAL BUILD → Compiles in RAM tmpfs with full core saturation &amp; SIMD flags!</text>
+<rect x="44" y="872" width="114" height="104" rx="8" fill="#16161e" stroke="#f7768e" stroke-width="2"/>
+<text x="101" y="904" text-anchor="middle" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="14" font-weight="800" fill="#f7768e">LAYER 7</text>
+<rect x="54" y="916" width="94" height="24" rx="5" fill="#292e42" stroke="#f7768e" stroke-width="1"/>
+<text x="101" y="932" text-anchor="middle" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="11" font-weight="700" fill="#ffffff">Selective</text>
+<text x="101" y="960" text-anchor="middle" font-family="'Avenir Next', 'Helvetica Neue', -apple-system, BlinkMacSystemFont, sans-serif" font-size="10.5" fill="#a9b1d6">Tier 7</text>
+<rect x="174" y="872" width="890" height="104" rx="8" fill="#292e42" stroke="#f7768e" stroke-width="1.6" filter="url(#shadowSm)"/>
+<rect x="174" y="872" width="7" height="104" rx="3.5" fill="#f7768e"/>
+<text x="196" y="898" font-family="'Avenir Next', 'Helvetica Neue', -apple-system, BlinkMacSystemFont, sans-serif" font-size="14.5" font-weight="800" fill="#f7768e">SIMD MICROARCHITECTURE TUNING (--tune)</text>
+<rect x="596" y="880" width="454" height="26" rx="5" fill="#16161e" stroke="#414868" stroke-width="1"/>
+<text x="823" y="897" text-anchor="middle" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="10.8" font-weight="700" fill="#ffffff">guix build --tune=native (x86-64-v3 / v4 / AVX-512)</text>
+<text x="196" y="928" font-family="'Avenir Next', 'Helvetica Neue', -apple-system, BlinkMacSystemFont, sans-serif" font-size="12.5" fill="#c0caf5">Rebuilds ONLY compute-critical leaf packages (BLAS, FFmpeg, llama.cpp) with -march=native; keeps standard world cached!</text>
+<text x="196" y="956" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="11" font-weight="700" fill="#ff9e64">⚙ LOCAL BARE-METAL BUILD → Compiles in RAM tmpfs with full core saturation &amp; SIMD flags!</text>
+<g>
+  <rect x="1104" y="112" width="472" height="892" rx="10" fill="#1f2335" stroke="#414868" stroke-width="1.5" filter="url(#shadow)"/>
+  <rect x="1104" y="112" width="472" height="36" rx="10" fill="#16161e" stroke="#e0af68" stroke-width="1.2"/>
+  <rect x="1104" y="112" width="8" height="36" rx="4" fill="#e0af68"/>
+  <text x="1122" y="135" font-family="'Avenir Next', 'Helvetica Neue', -apple-system, BlinkMacSystemFont, sans-serif" font-size="13.5" font-weight="700" fill="#e0af68" letter-spacing="0.4">DECLARATIVE DAEMON &amp; TMPFS CONFIG</text>
+  <rect x="1473.0" y="118" width="93.0" height="24" rx="5" fill="#24283b" stroke="#e0af68" stroke-width="1"/>
+  <text x="1519.5" y="134" text-anchor="middle" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="10.5" font-weight="700" fill="#ffffff">config.scm</text>
+</g>
+<text x="1124" y="170" font-family="'Avenir Next', 'Helvetica Neue', -apple-system, BlinkMacSystemFont, sans-serif" font-size="13" font-weight="700" fill="#e0af68">1. Tune guix-daemon (Layers 2, 3, 4, 6):</text>
+<rect x="1124" y="180" width="432" height="300" rx="8" fill="#16161e" stroke="#e0af68" stroke-width="1.4"/>
+<text x="1138" y="204" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="11.2" fill="#ffffff">(modify-services %desktop-services</text>
+<text x="1152" y="221" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="11.2" fill="#bb9af7">(guix-service-type config =&gt;</text>
+<text x="1166" y="238" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="11.2" fill="#7dcfff">(guix-configuration</text>
+<text x="1180" y="255" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="11.2" fill="#a9b1d6">(inherit config)</text>
+<text x="1180" y="272" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="11.2" fill="#565f89">;; Layer 3: Auto-discover LAN peers</text>
+<text x="1180" y="289" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="11.2" fill="#7aa2f7">(discover? #t)</text>
+<text x="1180" y="306" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="11.2" fill="#565f89">;; Layer 4: Fast Continent CDNs</text>
+<text x="1180" y="323" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="11.2" fill="#bb9af7">(substitute-urls</text>
+<text x="1194" y="340" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="11.2" fill="#9ece6a">&#x27;(&quot;https://bordeaux.guix.gnu.org&quot;</text>
+<text x="1208" y="357" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="11.2" fill="#9ece6a">&quot;https://ci.guix.gnu.org&quot;</text>
+<text x="1208" y="374" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="11.2" fill="#9ece6a">&quot;https://substitutes.nonguix.org&quot;))</text>
+<text x="1180" y="391" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="11.2" fill="#565f89">;; Layers 2 &amp; 6: GC roots + Parallelism</text>
+<text x="1180" y="408" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="11.2" fill="#e0af68">(extra-options</text>
+<text x="1194" y="425" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="11.2" fill="#ff9e64">&#x27;(&quot;--max-jobs=4&quot; &quot;--cores=0&quot;</text>
+<text x="1208" y="442" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="11.2" fill="#ff9e64">&quot;--gc-keep-derivations=yes&quot;</text>
+<text x="1208" y="459" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="11.2" fill="#ff9e64">&quot;--gc-keep-outputs=yes&quot;)))))</text>
+<text x="1124" y="504" font-family="'Avenir Next', 'Helvetica Neue', -apple-system, BlinkMacSystemFont, sans-serif" font-size="13" font-weight="700" fill="#7aa2f7">2. LAN Substitute Server &amp; RAM /tmp (Layers 3 &amp; 6):</text>
+<rect x="1124" y="514" width="432" height="218" rx="8" fill="#16161e" stroke="#7aa2f7" stroke-width="1.4"/>
+<text x="1138" y="538" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="11.2" fill="#565f89">;; Serve local /gnu/store to LAN with zstd:</text>
+<text x="1138" y="555" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="11.2" fill="#7aa2f7">(service guix-publish-service-type</text>
+<text x="1152" y="572" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="11.2" fill="#7dcfff">(guix-publish-configuration</text>
+<text x="1166" y="589" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="11.2" fill="#ffffff">(advertise? #t) (port 8181)</text>
+<text x="1166" y="606" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="11.2" fill="#9ece6a">(compression &#x27;((&quot;zstd&quot; 3)))))</text>
+<text x="1138" y="640" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="11.2" fill="#565f89">;; Mount /tmp in RAM for zero-disk-wear builds:</text>
+<text x="1138" y="657" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="11.2" fill="#ff9e64">(file-system</text>
+<text x="1152" y="674" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="11.2" fill="#ffffff">(mount-point &quot;/tmp&quot;) (device &quot;none&quot;)</text>
+<text x="1152" y="691" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="11.2" fill="#e0af68">(type &quot;tmpfs&quot;)</text>
+<text x="1152" y="708" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="11.2" fill="#9ece6a">(options &quot;size=32G,mode=1777&quot;))</text>
+<text x="1124" y="758" font-family="'Avenir Next', 'Helvetica Neue', -apple-system, BlinkMacSystemFont, sans-serif" font-size="13" font-weight="700" fill="#9ece6a">3. Speed Audit &amp; Diagnostic CLI Commands:</text>
+<rect x="1124" y="768" width="432" height="216" rx="8" fill="#16161e" stroke="#9ece6a" stroke-width="1.4"/>
+<text x="1138" y="792" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="11.2" fill="#565f89"># Check substitute coverage before building:</text>
+<text x="1138" y="809" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="11.2" fill="#7dcfff">$ guix weather emacs-pgtk linux-libre</text>
+<text x="1138" y="843" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="11.2" fill="#565f89"># Preview what would build vs substitute:</text>
+<text x="1138" y="860" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="11.2" fill="#9ece6a">$ guix build --dry-run -m manifest.scm</text>
+<text x="1138" y="894" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="11.2" fill="#565f89"># Verify SSH offload cluster connectivity:</text>
+<text x="1138" y="911" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="11.2" fill="#e0af68">$ guix offload test /etc/guix/machines.scm</text>
+<text x="1138" y="945" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="11.2" fill="#565f89"># Build compute package tuned for host SIMD:</text>
+<text x="1138" y="962" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="11.2" fill="#f7768e">$ guix build --tune=native llama-cpp</text>
+
+  <!-- Footer -->
+  <text x="32" y="1030" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="11" fill="#565f89">04-guix-build-acceleration-stack · 7-Layer Build Acceleration Stack</text>
+  <text x="1568" y="1030" text-anchor="end" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="11" fill="#565f89">TOKYO NIGHT TECHNICAL BLUEPRINT · GNU GUILE / GUIX ARCHITECTURE</text>
+</svg>

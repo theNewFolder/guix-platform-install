@@ -1,0 +1,471 @@
+PURPOSE: framework-dual/install/03-config-dual-boot.go
+=====================================================
+
+Generates /mnt/etc/config.scm for a Framework 13 AMD dual-booting with Pop!_OS
+on a shared EFI partition.
+
+This file exists because the generated Guile config contains several settings
+whose justification is not visible from the code, and at least three of them
+have been "fixed" in the wrong direction at least once. Read this before
+changing any of them.
+
+TARGET HARDWARE
+---------------
+Framework Laptop 13 (AMD Ryzen AI 300 Series) -- Strix Point.
+
+  GPU              1002:1114  Radeon 890M, gfx11.5
+  Root disk        NVMe       /dev/nvme0n1
+  Internal keyboard  i8042    "AT Translated Set 2 keyboard", IRQ 1
+  Touchpad         i2c-hid    PIXA3854
+
+The keyboard being i8042 rather than USB is load-bearing; see KERNEL ARGUMENTS.
+
+Verify with:
+  cat /sys/class/dmi/id/product_name
+  lspci -nn | grep -iE 'vga|display'
+  grep -A4 'AT Translated' /proc/bus/input/devices
+
+
+generateMinimalConfig()
+-----------------------
+
+dataFS -- (flags '(no-atime)), NOT (options "noatime")
+......................................................
+Only emitted when state.HomePartition is set.
+
+In a Guix <file-system> record, flags and options are not interchangeable:
+
+  flags    list of symbols (no-atime, no-suid, no-dev, read-only), converted to
+           mount(2) flag bits by mount-flags->bit-mask
+  options  a string passed verbatim as mount(2)'s data argument, i.e.
+           FILESYSTEM-SPECIFIC PARAMETERS ONLY
+
+Putting a VFS-level token in options makes the kernel reject the mount:
+"ext4: Unknown parameter 'noatime'". On /data -- a non-root filesystem -- that
+is not cosmetic. file-system-/data fails, the file-systems target fails,
+user-processes never starts, and the machine boots with NO LOGIN TTYS AT ALL.
+There is then no way in to repair it except mounting the disk from Pop!_OS.
+
+This has been wrong twice: first (options "defaults,noatime"), then
+(options "noatime"). Guix's own %base-file-systems shows the split:
+(flags '(read-only bind-mount no-atime)) versus (options "size=50%").
+
+Guarded by TestGenerateMinimalConfig_DataFilesystemFlags.
+
+
+keyboardLayoutConfig
+....................
+Optional. Emitted only when the user chose a layout in an earlier step. The
+"us:ctrl:swapcaps" form exists because Emacs users want Caps Lock as Control,
+and remapping at the Guix level survives reconfigures.
+
+
+initrdModules -- %base-initrd-modules, unmodified
+.................................................
+The initrd only has to get far enough to mount root. udev handles everything
+else once the real system is up.
+
+Three modules used to be prepended here. All three are gone on purpose:
+
+  amdgpu      Not needed to mount root. Loading the GPU driver from the initrd
+              also requires its firmware in the initrd, which is a second way
+              to fail BEFORE there is any console to display the failure on.
+  usbhid      Already in %base-initrd-modules, next to hid-generic. Listing it
+              twice is noise. It is also irrelevant to this laptop's internal
+              keyboard, which is i8042, not USB.
+  i2c_piix4   SMBus for sensors. Nothing to do with booting.
+
+A filter -- (remove (lambda (module) (or (string=? module "nvme") ...)))
+-- also used to wrap %base-initrd-modules, on the theory that nvme and
+xhci_pci are built into kernel 6.6.16 and would raise "kernel module not
+found". It was a no-op: neither name appears in %base-initrd-modules. See
+default-initrd-modules in gnu/system/linux-initrd.scm, which lists ahci,
+usb-storage, uas, usbhid, hid-generic, hid-apple, mmc_block, dm-crypt, xts,
+serpent_generic, wp512, nls_iso8859-1, pata_acpi, pata_atiixp, isci, and the
+virtio set. Nothing else.
+
+Worse than useless: hardcoding "these are built in" is a statement about ONE
+pinned kernel. Under a newer pin it would eventually strip a module the kernel
+genuinely needs, and fail in the direction that does not boot.
+
+NVMe: "nvme" is deliberately absent, matching the Guix default. NVMe root works
+because the driver is built into the kernel rather than loadable. If a future
+pin makes it modular, root will fail to mount and "nvme" must be added. Check
+with:
+  find /gnu/store/<hash>-linux-<version>/lib/modules -name 'nvme.ko*'
+
+The filtering MECHANISM is kept in lib/check-kernel-modules.go rather than
+deleted, because it is the right shape for a real fix -- but it must be driven
+by FindKernelPackageForModules + CheckKernelModulesAvailable inspecting the
+actual built kernel, never by a hardcoded list.
+
+Guarded by TestGenerateMinimalConfig_InitrdModules.
+
+
+kernel-arguments -- append, and none of the old workarounds
+...........................................................
+  (kernel-arguments (append '("loglevel=3") %default-kernel-arguments))
+
+Two independent requirements.
+
+1. APPEND, never replace.
+   %default-kernel-arguments is not just "quiet". It is:
+     (list "modprobe.blacklist=usbmouse,usbkbd" "quiet")
+   Upstream blacklists usbkbd because it races usbhid
+   (bugs.gnu.org/35574). Replacing the list silently drops that blacklist --
+   on a laptop, a way to lose your keyboard, in a config whose whole problem
+   history is losing the keyboard.
+
+2. NEVER add nomodeset, noapic, nolapic or acpi=off.
+   All four were present at various points, added to suppress a boot hang.
+
+   nomodeset  Disables kernel modesetting. Directly contradicts (kernel linux)
+              + (firmware (list linux-firmware)) + amdgpu. Cannot fix missing
+              firmware; only guarantees an unaccelerated console.
+   acpi=off   Broke xhci_hcd init ("probe of 0000:c3:00.4 failed with error
+              -22"), killing USB. Removed earlier for this reason.
+   noapic     Disables the I/O APIC.
+   nolapic    Disables the local APIC. Together these force legacy 8259
+              interrupt routing, which modern AMD platforms do not reliably
+              provide. The internal keyboard is i8042 on IRQ 1, so it would
+              receive no interrupts. nolapic additionally drops the machine to
+              a single core.
+
+   DO NOT OVER-ATTRIBUTE. When this laptop was actually observed with a dead
+   console keyboard on 2026-08-01, the deployed GRUB entry was inspected and
+   its kernel line carried only "quiet". None of these arguments had ever
+   reached the machine. They are a latent defect in this generator, worth
+   removing on their own merits, but they explained nothing that was observed.
+
+   The real cause was the channel pin: linux-6.6.16 and its firmware predate
+   this laptop. Repinning forward to linux-7.1.5 fixed the keyboard, WiFi,
+   Bluetooth and amdgpu together -- verified on hardware 2026-08-02. Every one
+   of these arguments was treating a firmware problem with an
+   interrupt-controller sledgehammer.
+
+   The generalizable lesson: several unrelated-looking hardware failures on a
+   single boot almost always share one cause underneath -- a kernel and
+   firmware set older than the machine -- rather than being several independent
+   problems each deserving its own kernel argument.
+
+   Guarded by TestGeneratedConfigContainsInitrd, which fails if any of the four
+   strings reappears anywhere in the generated config. Note this is why the
+   generated config's comments do NOT name them: grepping a deployed
+   config.scm for "nolapic" should stay a reliable "this machine is
+   misconfigured" check. The full explanation lives in the Go source comment
+   above the template instead.
+
+loglevel=3 was in the old set, is harmless, and is kept.
+
+
+kernel / firmware / initrd
+..........................
+  (kernel linux)                   nonguix, linux-7.1.5 at the pinned commit
+  (initrd microcode-initrd)        nonguix, from (nongnu system linux-initrd)
+  (firmware (list linux-firmware)) nonguix, linux-firmware-20260622
+
+microcode-initrd rather than base-initrd: it wraps base-initrd to prepend the
+CPU microcode blob, so the AMD microcode update is applied before the kernel
+proper starts. The module it lives in was already imported by this config while
+going unused, which is what flagged the discrepancy. It is also what the
+previously deployed system on this laptop used, so keeping it means the repo
+reproduces the configuration that was verified on hardware.
+
+linux-libre will not drive this GPU: amdgpu needs redistributable firmware
+blobs. That is the entire reason framework-dual uses nonguix at all, and why
+this platform is separate from cloudzy, which is free-software-only.
+
+(kernel linux) resolves to whatever nonguix calls latest at the pinned commit.
+Because the channel is pinned this does not drift between installs.
+(kernel linux-lts) is the conservative alternative if a mainline release
+regresses on this hardware -- see docs/CHANNEL_PINNING_POLICY.md.
+
+
+bootloader
+..........
+GRUB EFI into the EFI partition shared with Pop!_OS. Pop!_OS uses systemd-boot
+in \EFI\systemd\, Guix installs to \EFI\Guix\; they coexist because they are
+separate directories on one ESP and separate NVRAM entries. timeout 5 so the
+generation menu is reachable when a reconfigure breaks the system.
+
+menu-entries adds a chainload entry for Pop!_OS:
+
+  (menu-entry (label "Pop!_OS")
+              (device (file-system-label "EFI"))
+              (chain-loader "/EFI/systemd/systemd-bootx64.efi"))
+
+Without it, Guix's GRUB lists only its own generations and "Firmware setup",
+so returning to the other OS requires the firmware boot menu (F12 on
+Framework). That is a poor result for a dual-boot installer, and easy to miss
+entirely on machines whose UEFI timeout is 0 -- as this one's is, which means
+the firmware goes straight to whatever is first in BootOrder.
+
+This hands control to systemd-boot; it does not modify it. The ESP is matched
+by LABEL, not device path, for the same reason as the file-systems section.
+GRUB renders the entry as "search --label" followed by "chainloader".
+
+If Pop!_OS is absent the entry is harmless -- selecting it fails and the rest
+of the menu is unaffected.
+
+Guarded by TestGenerateMinimalConfig_PopOSMenuEntry.
+
+Note the Go template is a raw string literal delimited by backticks, so
+backticks must never appear in these comments. Doing so terminates the literal
+and produces a confusing parse error far from the real edit.
+
+
+file-systems
+............
+Mounted by LABEL (GUIX_ROOT, EFI, DATA), never by device path. Device
+enumeration order is not stable, and on a dual-boot disk the numbering is
+whatever the other OS's installer left behind.
+
+
+users / packages / services
+...........................
+Deliberately minimal: %base-packages, one wheel/netdev user, no desktop and no
+SSH. Everything else is added post-install with guix-customize. Rationale: a
+minimal config that boots is debuggable; a config that fails to boot with GNOME
+in it is not.
+
+Networking is the one deliberate exception to "minimal".
+
+  (services (append (list (service network-manager-service-type)
+                          (service wpa-supplicant-service-type)
+                          (service dbus-root-service-type)
+                          (service polkit-service-type)
+                          (service ntp-service-type))
+                    %base-services))
+
+%base-services provides loopback and nothing else. This laptop's ONLY network
+interface is the MediaTek MT7925 wireless card (14c3:0717, driver mt7925e);
+Framework 13 has no built-in ethernet, it uses expansion cards. So a system
+installed with bare %base-services cannot reach the network at all, and
+therefore cannot guix pull to repair itself -- a very expensive state to land
+in on a machine whose keyboard is also suspect.
+
+This is not hypothetical. The previously installed system ran linux-6.6.16,
+which predates mt7925e (added in Linux 6.7). Verified directly:
+
+  find /mnt/guixroot/gnu/store/*-linux-6.6.16/lib/modules -name 'mt79*'
+  (no output)
+
+That kernel does ship mt76, mt76-connac-lib and mt7601u, which makes the
+absence easy to misread as "mediatek support is present". The same chip is the
+Bluetooth radio, so the console's "Bluetooth: hci0: Failed to send wmt func
+ctrl (-110)" has the same cause. amdgpu, WiFi and Bluetooth all failing on one
+boot was ONE root cause -- the stale channel pin -- not three.
+
+dbus and polkit are prerequisites, not extras. network-manager-service-type
+declares service-extensions onto dbus-root-service-type and
+polkit-service-type; Guix aborts the build with "no target of type ..." if
+either is absent, and %base-services instantiates neither. Guix's own
+%desktop-services pairs wpa-supplicant with NetworkManager, annotated in
+gnu/services/desktop.scm as ";needed by NetworkManager".
+
+ntp is included because clock skew breaks TLS, which breaks guix pull.
+
+APPEND to %base-services, never replace: it carries login, mingetty on tty1-6
+and the system log. Replacing it yields a system with no way to log in.
+
+nmcli/nmtui reach PATH automatically -- the service extends
+profile-service-type -- so no (packages ...) entry is needed. After first boot,
+run nmtui on the console.
+
+Guarded by TestGenerateMinimalConfig_Networking.
+
+NOTE: the generated config does not set a password for the user account, so
+that account is locked. On a fresh init, log in as root (empty password) on
+tty1 and run passwd.
+
+
+guix-service-type override (channels + substitutes)
+---------------------------------------------------
+  (modify-services %base-services
+    (guix-service-type
+     config => (guix-configuration
+                (inherit config)
+                (channels %framework-dual-channels)
+                (substitute-urls (cons "https://substitutes.nonguix.org"
+                                       %default-substitute-urls))
+                (authorized-keys (cons %nonguix-signing-key
+                                       %default-authorized-guix-keys)))))
+
+This exists because of a failure observed on hardware 2026-08-02. The installer
+pins channels for its own time-machine run, but that pin lived only on the
+machine doing the installing. The system it produced booted knowing about the
+"guix" channel and nothing else, so:
+
+  sudo guix system reconfigure /etc/config.scm
+
+  failed to load '/etc/config.scm':
+  ... in procedure resolve-interface: no code for module (nongnu packages linux)
+
+The config that BUILT the machine could not be re-evaluated ON the machine.
+That is the worst possible time to discover it: the only way to change anything
+about the system -- including rolling a change back -- is reconfigure.
+
+Two settings fix two genuinely separate problems, and it is easy to do one and
+believe you have done both:
+
+  channels          Written to /etc/guix/channels.scm by the guix service's
+                    activation gexp (install-channels-file in
+                    gnu/services/base.scm; the field takes a LIST OF CHANNEL
+                    RECORDS despite the "file-like" comment on the field).
+                    This makes (nongnu ...) resolvable, and makes "guix pull"
+                    on the machine reproduce the pin rather than jump to HEAD.
+
+  substitute-urls   Authorizing a signing key and querying a substitute server
+                    are different settings. %default-substitute-urls is
+                    bordeaux + ci.guix; nonguix is not in it. With the key
+                    authorized but the URL absent, guix does not error -- it
+                    quietly decides there is no substitute and compiles Linux
+                    from source. That is hours of CPU and several GiB of store
+                    on a laptop, and it looks like a hang. This exact trap cost
+                    2.5 GiB of store on the host machine during bring-up.
+
+The signing key is embedded with plain-file rather than local-file or a
+download, so the config still evaluates on a machine with no network yet -- the
+same machine that needs the network services above to get one.
+
+The channel commits come from lib.FrameworkDualGuixCommit /
+lib.FrameworkDualNonguixCommit rather than being written out in the template,
+so the pin moves in one place. TestGenerateMinimalConfig_ChannelsAndSubstitutes
+asserts the generated config carries those exact commits.
+
+Both cons onto the defaults rather than replacing them. Replacing
+%default-authorized-guix-keys would de-authorize ci.guix and bordeaux, i.e.
+turn off substitutes for all of Guix proper.
+
+Guarded by TestGenerateMinimalConfig_ChannelsAndSubstitutes.
+
+
+console-font-service-type override (readable console on a high-DPI panel)
+-------------------------------------------------------------------------
+  (modify-services %base-services
+    (console-font-service-type
+     config => (map (lambda (tty+font)
+                      (cons (car tty+font) "solar24x32"))
+                    config))
+    ...)
+
+The Framework 13 panel is 2256x1504 across a 13.5" diagonal. Guix's
+%default-console-font is Unifont-APL8x16 -- about 1.5 mm of cap height there,
+which is not readable at laptop distance. This is not cosmetic: the console is
+where you land when the desktop is not up, so the font is worst exactly when
+something has already gone wrong and you need to read an error.
+
+Why modify-services and not another (service console-font-service-type ...) in
+the appended list: %base-services ALREADY instantiates this type (gnu/system.scm
+maps tty1..tty6 to %default-console-font). Its shepherd services are named
+console-font-tty1 .. console-font-tty6, so a second instance covering the same
+ttys collides on those provisions and the system fails to build. Verified: the
+generated config yields exactly ONE instance whose value is
+(("tty1" . "solar24x32") ... ("tty6" . "solar24x32")).
+
+Why map over the incoming config rather than restating '("tty1" ... "tty6"):
+the tty list stays whatever %base-services defines. Only the font is this
+config's business; if upstream changes which ttys get fonts, this follows.
+
+Why "solar24x32" specifically. The service's own documentation says the font may
+be "the name of a font provided by the kbd package or any valid argument to
+setfont", and console-font-shepherd-services invokes
+(file-append kbd "/bin/setfont"), so a bare name resolves against that same kbd.
+kbd 2.5.1 ships exactly two fonts at this size: solar24x32.psfu.gz and
+latarcyrheb-sun32.psfu.gz.
+
+Do NOT use the Terminus console fonts (ter-v32n, ter-v32b) named in older notes
+in this repo, including docs/CONSOLE_FONT_TIPS.md before it was corrected. Those
+come from the font-terminus package, which this config does not install. Naming
+a font kbd does not ship produces no configuration error -- setfont simply fails
+at boot and the console stays at the default. TestGenerateMinimalConfig_
+ConsoleFont asserts they do not appear.
+
+Risk assessment, since this repo's policy is that the config stays minimal: this
+setting cannot cost you a console. console-font-shepherd-services declares
+(requirement (list 'term-ttyN)) -- the font service depends on mingetty, not the
+reverse -- so a font that fails to load cannot prevent a login prompt. The start
+gexp additionally treats setfont's EX_OSERR (71) as success, matching systemd's
+vconsole behaviour.
+
+Note for postinstall: framework-dual/postinstall/customize option 6
+(add_console_font in postinstall/lib.sh) becomes a no-op against this config --
+it greps for "console-font-service-type" and warns "already configured". That
+guard is what keeps it from appending the colliding second instance described
+above. Platforms whose generated config does NOT mention the type are still
+exposed to that, since add_console_font appends rather than modifies.
+
+Guarded by TestGenerateMinimalConfig_ConsoleFont.
+
+
+network-manager-configuration: DNS that survives a reconnect
+-------------------------------------------------------------
+  (service network-manager-service-type
+           (network-manager-configuration
+            (extra-configuration-files
+             (list (list "dns.conf"
+                         (plain-file "nm-global-dns.conf" "..."))))))
+
+Observed on hardware 2026-08-02. After a reboot the machine had connectivity
+but an unusable /etc/resolv.conf, so:
+
+  sudo -i guix pull
+  ...
+  guix/ui.scm:1033:18 In procedure getaddrinfo: Name or service not known
+
+The same run ALSO reported the nonguix channel as untrusted. That was not a
+second problem. A channel introduction is verified against the signer key on
+the channel repo's "keyring" branch; with DNS down the repo could not be
+cloned, so the key was unreachable and the introduction unverifiable. One
+fault, two error messages -- and the more alarming of the two sends you off
+auditing signing keys instead of checking resolv.conf. Diagnose in this order:
+raw connectivity (ping an IP), then resolution (ping a name), then the trust
+error, which usually evaporates.
+
+Editing /etc/resolv.conf by hand is not a fix, only a reprieve: NetworkManager
+rewrites that file whenever a connection comes up.
+
+Two durable options were considered:
+
+  per-connection    nmcli con mod "<name>" ipv4.dns "..." +
+                    ipv4.ignore-auto-dns yes. Correct, but it lives in
+                    /etc/NetworkManager/system-connections, which this repo
+                    does not generate -- so a fresh install would not have it,
+                    which is exactly when it is needed most.
+
+  global-dns        A file in /etc/NetworkManager/conf.d, which the service's
+                    extra-configuration-files field populates. Declarative,
+                    part of the system generation, and rolls back with it.
+
+The second is what this config does. NetworkManager's activation gexp symlinks
+a file-union onto /etc/NetworkManager/conf.d when extra-configuration-files is
+non-empty (gnu/services/networking.scm). Verified by building that file-union:
+it yields dns.conf containing exactly the [global-dns] / [global-dns-domain-*]
+block written here.
+
+TRADEOFF, stated plainly: [global-dns-domain-*] is an OVERRIDE, not a fallback.
+It beats DHCP-supplied servers on every connection. On a network with
+split-horizon DNS -- a corporate resolver, or a home router serving .lan names
+-- internal hostnames stop resolving. That is a real cost, accepted here for
+one reason: this machine's only route to repairing itself is "guix pull", and
+that needs name resolution. The rest of this config is deliberately minimal;
+the resolver is not a good place to be minimal. To opt out, delete the
+network-manager-configuration record and instantiate the service with no
+configuration argument -- DHCP's servers come back.
+
+9.9.9.9 (Quad9) and 1.1.1.1 (Cloudflare) are two independent operators, so a
+single provider outage does not take name resolution with it.
+
+Guarded by TestGenerateMinimalConfig_DNS. Note that
+TestGenerateMinimalConfig_Networking matches "(service
+network-manager-service-type" WITHOUT the closing paren for this reason; the
+other services in that list are still instantiated bare.
+
+
+RELATED
+-------
+docs/CHANNEL_PINNING_POLICY.md      why the pin must be newer than the hardware
+docs/FRAMEWORK_STARTUP_HANG_FIX.md  the kernel arguments, in full
+docs/NVME_MODULE_FIX.md             the initrd module policy
+lib/common.go                       SetupNonguixChannel, pinned commits
+lib/check-kernel-modules.go         BuildInitrdModulesExpr, module inspection

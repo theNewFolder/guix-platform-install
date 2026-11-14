@@ -1,0 +1,970 @@
+#!/run/current-system/profile/bin/bash
+# Recovery script to complete Guix installation after time-machine
+# Use this when guix time-machine ran but didn't complete fully
+#
+# This script assumes:
+# - Partitions are formatted and mounted at /mnt
+# - /mnt/etc/config.scm exists
+# - ~/channels.scm or /tmp/channels.scm exists (for nonguix)
+# - guix time-machine was run but may have failed or been interrupted
+
+# Track if we should run verification on exit and prevent infinite loops
+RUN_VERIFICATION_ON_EXIT=true
+VERIFICATION_PASSED=false
+VERIFICATION_ALREADY_RUN=false
+RECOVERY_RETRY_COUNT="${RECOVERY_RETRY_COUNT:-0}"  # Track retry attempts
+MAX_RETRY_ATTEMPTS=3
+
+# Setup error logging
+ERROR_SUMMARY_LOG=$(mktemp)
+
+error_msg() {
+    local msg="$1"
+    echo "[ERROR] $msg" >&2
+    echo "[ERROR] $msg" >> "$ERROR_SUMMARY_LOG"
+}
+
+show_error_summary() {
+    if [ -s "$ERROR_SUMMARY_LOG" ]; then
+        echo ""
+        echo "========================================"
+        echo "  ERROR SUMMARY"
+        echo "========================================"
+        cat "$ERROR_SUMMARY_LOG"
+        echo "========================================"
+        echo ""
+    fi
+    rm -f "$ERROR_SUMMARY_LOG"
+}
+
+# Function to run verification and handle failures
+run_final_verification() {
+    # Prevent infinite loops - if we're already running verification, don't run again
+    if [ "$VERIFICATION_ALREADY_RUN" = true ]; then
+        return 0
+    fi
+    VERIFICATION_ALREADY_RUN=true
+    
+    echo ""
+    echo "========================================"
+    echo "  FINAL VERIFICATION"
+    echo "========================================"
+    echo ""
+    
+    # Always verify kernel/initrd are present (critical check)
+    KERNEL_MISSING=false
+    INITRD_MISSING=false
+    
+    if ! ls /mnt/boot/vmlinuz* >/dev/null 2>&1; then
+        error_msg "Kernel file missing from /mnt/boot/"
+        KERNEL_MISSING=true
+    else
+        echo "[OK] Kernel present: $(ls /mnt/boot/vmlinuz* | head -1 | xargs basename)"
+    fi
+    
+    if ! ls /mnt/boot/initrd* >/dev/null 2>&1; then
+        error_msg "Initrd file missing from /mnt/boot/"
+        INITRD_MISSING=true
+    else
+        echo "[OK] Initrd present: $(ls /mnt/boot/initrd* | head -1 | xargs basename)"
+    fi
+    
+    if [ "$KERNEL_MISSING" = true ] || [ "$INITRD_MISSING" = true ]; then
+        echo ""
+        echo "CRITICAL: Kernel or initrd files are missing!"
+        echo "The system will NOT boot without these files."
+        echo ""
+        
+        # Check if we've exceeded retry limit
+        if [ "$RECOVERY_RETRY_COUNT" -ge "$MAX_RETRY_ATTEMPTS" ]; then
+            echo "========================================"
+            echo "  RECOVERY FAILED AFTER $MAX_RETRY_ATTEMPTS ATTEMPTS"
+            echo "========================================"
+            show_error_summary
+            echo ""
+            echo "The recovery script has been run $MAX_RETRY_ATTEMPTS times but kernel/initrd files"
+            echo "are still missing. Manual intervention is required."
+            echo ""
+            echo "What happened:"
+            echo "  - Attempted to recover kernel/initrd files $MAX_RETRY_ATTEMPTS times"
+            echo "  - Each attempt completed but files were still missing"
+            echo ""
+            echo "Possible causes:"
+            echo "  1. System build is failing silently (check /tmp/guix-install.log)"
+            echo "  2. Kernel/initrd not being created in system generation"
+            echo "  3. Filesystem or permissions issues preventing file copy"
+            echo "  4. AMD GPU firmware issues (framework-dual) causing build failures"
+            echo ""
+            echo "Next steps:"
+            echo "  1. Check logs: cat /tmp/guix-install.log | tail -100"
+            echo "  2. Verify config.scm has kernel specified: grep -A 5 kernel /mnt/etc/config.scm"
+            echo "  3. Check system generation: ls -la /gnu/store/*-system | head -5"
+            echo "  4. Try manual recovery:"
+            echo "     SYSTEM=\$(ls -td /gnu/store/*-system | head -1)"
+            echo "     cp \$SYSTEM/kernel /mnt/boot/vmlinuz"
+            echo "     cp \$SYSTEM/initrd /mnt/boot/initrd"
+            echo ""
+            return 1
+        fi
+        
+        # Increment retry counter and automatically retry
+        RECOVERY_RETRY_COUNT=$((RECOVERY_RETRY_COUNT + 1))
+        echo "Automatically retrying recovery (attempt $RECOVERY_RETRY_COUNT/$MAX_RETRY_ATTEMPTS)..."
+        echo ""
+        # Disable trap for the new execution
+        trap - EXIT
+        # Re-execute this script with incremented retry count
+        RECOVERY_RETRY_COUNT=$RECOVERY_RETRY_COUNT exec "$0"
+    fi
+    
+    # Run comprehensive verification script if available
+    VERIFY_SCRIPT=""
+    if [ -f /root/verify-guix-install.sh ]; then
+        VERIFY_SCRIPT="/root/verify-guix-install.sh"
+    elif [ -f ./verify-guix-install.sh ]; then
+        VERIFY_SCRIPT="./verify-guix-install.sh"
+    fi
+    
+    if [ -n "$VERIFY_SCRIPT" ]; then
+        echo "Running comprehensive verification script..."
+        echo ""
+        # Temporarily disable set -e for verification (we'll handle errors manually)
+        set +e
+        if bash "$VERIFY_SCRIPT"; then
+            VERIFICATION_PASSED=true
+            echo ""
+            echo "[OK] Comprehensive verification passed"
+        else
+            VERIFICATION_PASSED=false
+            echo ""
+            echo "[WARN] Comprehensive verification found issues"
+            echo ""
+            
+            # Check if we've exceeded retry limit
+            if [ "$RECOVERY_RETRY_COUNT" -ge "$MAX_RETRY_ATTEMPTS" ]; then
+                echo "========================================"
+                echo "  RECOVERY FAILED AFTER $MAX_RETRY_ATTEMPTS ATTEMPTS"
+                echo "========================================"
+                show_error_summary
+                echo ""
+                echo "The recovery script has been run $MAX_RETRY_ATTEMPTS times but verification"
+                echo "still fails. Manual intervention is required."
+                echo ""
+                echo "Run the verification script manually to see details:"
+                echo "  $VERIFY_SCRIPT"
+                echo ""
+                set -e
+                return 1
+            fi
+            
+            # Increment retry counter and automatically retry
+            RECOVERY_RETRY_COUNT=$((RECOVERY_RETRY_COUNT + 1))
+            echo "Automatically retrying recovery (attempt $RECOVERY_RETRY_COUNT/$MAX_RETRY_ATTEMPTS)..."
+            echo ""
+            # Disable trap for the new execution
+            trap - EXIT
+            # Re-execute this script with incremented retry count
+            RECOVERY_RETRY_COUNT=$RECOVERY_RETRY_COUNT exec "$0"
+        fi
+        set -e
+    else
+        # No verify script available, but kernel/initrd check passed
+        VERIFICATION_PASSED=true
+        echo "[OK] Basic verification passed (kernel/initrd present)"
+    fi
+    
+    return 0
+}
+
+# Trap to run verification on exit (unless we're already in verification)
+# Use a function wrapper to handle errors gracefully
+cleanup_and_verify() {
+    if [ "$RUN_VERIFICATION_ON_EXIT" = true ] && [ "$VERIFICATION_ALREADY_RUN" = false ]; then
+        # Temporarily disable set -e so trap doesn't exit on verification failure
+        set +e
+        run_final_verification
+        set -e
+    fi
+}
+
+trap cleanup_and_verify EXIT
+
+set -e  # Exit on error (after trap is set)
+
+echo "=== Guix Installation Recovery Script ==="
+if [ "$RECOVERY_RETRY_COUNT" -gt 0 ]; then
+    echo ""
+    echo "  [RETRY ATTEMPT $RECOVERY_RETRY_COUNT/$MAX_RETRY_ATTEMPTS]"
+echo ""
+fi
+echo "This script will:"
+echo "  1. Verify current installation state"
+echo "  2. Re-run guix system init if needed (with time-machine)"
+echo "  3. Set user password"
+echo "  4. Download customization tools"
+echo "  5. Configure dual-boot GRUB (if framework-dual)"
+echo "  6. Write installation receipt"
+echo "  7. Run verification (will auto-retry up to $MAX_RETRY_ATTEMPTS times if needed)"
+echo ""
+if [ "$RECOVERY_RETRY_COUNT" -eq 0 ]; then
+read -p "Continue? [Y/n] " -r </dev/tty
+if [[ $REPLY =~ ^[Nn]$ ]]; then
+    echo "Aborted."
+    exit 0
+    fi
+else
+    echo "Automatically continuing (retry attempt $RECOVERY_RETRY_COUNT)..."
+    echo ""
+fi
+
+# Check if we're on Guix ISO
+if [ ! -f /run/current-system/profile/bin/guix ]; then
+    error_msg "Not running on Guix ISO - cannot continue"
+    exit 1
+fi
+
+# Verify mounts
+echo ""
+echo "=== Verifying Mounts ==="
+if ! mountpoint -q /mnt; then
+    error_msg "/mnt is not mounted!"
+    echo "Please run the mount step first:"
+    echo "  mount LABEL=GUIX_ROOT /mnt"
+    echo "  mkdir -p /mnt/boot/efi"
+    echo "  mount LABEL=EFI /mnt/boot/efi"
+    exit 1
+fi
+echo "[OK] /mnt is mounted"
+
+if ! mountpoint -q /mnt/boot/efi; then
+    error_msg "/mnt/boot/efi is not mounted!"
+    echo "Please mount EFI:"
+    echo "  mkdir -p /mnt/boot/efi"
+    echo "  mount LABEL=EFI /mnt/boot/efi"
+    exit 1
+fi
+echo "[OK] /mnt/boot/efi is mounted"
+
+# Verify config exists
+if [ ! -f /mnt/etc/config.scm ]; then
+    error_msg "/mnt/etc/config.scm not found!"
+    echo "Please generate config first (step 3)"
+    exit 1
+fi
+echo "[OK] Config exists: /mnt/etc/config.scm"
+
+# Check if channels.scm exists (needed for framework installers)
+# Check home directory first, then /tmp as fallback
+CHANNELS_PATH=""
+if [ -f ~/channels.scm ]; then
+    CHANNELS_PATH="$HOME/channels.scm"
+    echo "[OK] Channels file exists: $CHANNELS_PATH"
+    USE_TIME_MACHINE=true
+elif [ -f /tmp/channels.scm ]; then
+    CHANNELS_PATH="/tmp/channels.scm"
+    echo "[OK] Channels file exists: $CHANNELS_PATH"
+    USE_TIME_MACHINE=true
+else
+    echo "[WARN] No channels.scm found in ~/ or /tmp - using plain guix system init"
+    USE_TIME_MACHINE=false
+fi
+
+# Verify installation state
+echo ""
+echo "=== Checking Installation State ==="
+HAS_KERNEL=false
+HAS_INITRD=false
+HAS_GRUB_EFI=false
+
+if ls /mnt/boot/vmlinuz-* >/dev/null 2>&1; then
+    echo "[OK] Kernel found: $(ls /mnt/boot/vmlinuz-* | head -1 | xargs basename)"
+    HAS_KERNEL=true
+else
+    echo "[MISSING] No kernel in /mnt/boot/"
+fi
+
+if ls /mnt/boot/initrd-* >/dev/null 2>&1; then
+    echo "[OK] Initrd found: $(ls /mnt/boot/initrd-* | head -1 | xargs basename)"
+    HAS_INITRD=true
+else
+    echo "[MISSING] No initrd in /mnt/boot/"
+fi
+
+if [ -f /mnt/boot/efi/EFI/Guix/grubx64.efi ] || [ -f /mnt/boot/efi/EFI/guix/grubx64.efi ]; then
+    echo "[OK] GRUB EFI bootloader found"
+    HAS_GRUB_EFI=true
+else
+    echo "[MISSING] No GRUB EFI bootloader"
+fi
+
+# Determine if we need to run system init
+NEED_SYSTEM_INIT=false
+if [ "$HAS_KERNEL" = false ] || [ "$HAS_INITRD" = false ]; then
+    echo ""
+    echo "[!] Installation is INCOMPLETE - system init must be run"
+    NEED_SYSTEM_INIT=true
+fi
+
+# Setup environment for installation
+echo ""
+echo "=== Setting Up Environment ==="
+export TMPDIR=/mnt/var/tmp
+export XDG_CACHE_HOME=/mnt/var/cache
+mkdir -p "$TMPDIR" "$XDG_CACHE_HOME"
+echo "TMPDIR=$TMPDIR"
+echo "XDG_CACHE_HOME=$XDG_CACHE_HOME"
+
+# Clear substitute cache to free space
+echo "Clearing substitute cache..."
+rm -rf /var/guix/substitute-cache/ || true
+
+# Run system init if needed
+if [ "$NEED_SYSTEM_INIT" = true ]; then
+    echo ""
+    echo "=== Running System Init ==="
+
+    # Verify ESP before init
+    echo "Verifying EFI partition..."
+    if ! df -T /mnt/boot/efi | grep -q vfat; then
+        error_msg "/mnt/boot/efi is not vfat filesystem!"
+        df -T /mnt/boot/efi
+        exit 1
+    fi
+    echo "[OK] EFI partition is vfat"
+
+    # Start cow-store
+    echo "Starting cow-store..."
+    if ! herd status cow-store | grep -q "running"; then
+        herd start cow-store /mnt
+        sleep 2
+    fi
+    echo "[OK] cow-store is running"
+
+    # Ensure guix-daemon is responsive
+    echo "Checking guix-daemon..."
+    for i in {1..10}; do
+        if guix build --version >/dev/null 2>&1; then
+            echo "[OK] guix-daemon is responsive"
+            break
+        fi
+        echo "Waiting for daemon... ($i/10)"
+        sleep 3
+    done
+
+    # Use 3-step approach for both time-machine and free software installs
+    # This ensures kernel/initrd are always copied correctly
+    
+    if [ "$USE_TIME_MACHINE" = true ]; then
+        # Step 1: Build system with time-machine
+        echo ""
+        echo "=== Step 1/3: Building System (with time-machine) ==="
+        echo "This will take 5-30 minutes depending on substitutes..."
+        echo ""
+        
+        if ! guix time-machine -C "$CHANNELS_PATH" -- system build /mnt/etc/config.scm --substitute-urls="https://substitutes.nonguix.org https://ci.guix.gnu.org https://bordeaux.guix.gnu.org"; then
+            error_msg "System build failed!"
+            exit 1
+        fi
+        
+        # Step 2: Copy kernel/initrd
+        echo ""
+        echo "=== Step 2/3: Copying Kernel Files ==="
+        SYSTEM_PATH=$(ls -td /gnu/store/*-system 2>/dev/null | head -1)
+        if [ -z "$SYSTEM_PATH" ]; then
+            error_msg "No system generation found in /gnu/store"
+            echo "The system build may have failed silently."
+            echo "Please check /tmp/guix-install.log for errors"
+            exit 1
+        fi
+        
+        echo "Found system: $SYSTEM_PATH"
+        
+        # Debug: List contents of system generation
+        echo "Checking system generation contents..."
+        ls -la "$SYSTEM_PATH" || true
+        echo ""
+        
+        # CRITICAL: Verify kernel/initrd exist in system generation BEFORE copying
+        # If they don't exist, the build failed silently (common with amdgpu/nonguix issues)
+        KERNEL_SRC=""
+        INITRD_SRC=""
+        
+        # Find kernel - try multiple possible locations
+        if [ -f "$SYSTEM_PATH/kernel" ]; then
+        KERNEL_SRC="$SYSTEM_PATH/kernel"
+        else
+            echo "Kernel not found at $SYSTEM_PATH/kernel, trying alternative locations..."
+            # Try finding kernel in the store (might be a symlink or in a subdirectory)
+            ALTERNATIVES=$(find "$SYSTEM_PATH" -name 'kernel' -o -name 'vmlinuz*' -o -name 'bzImage' 2>/dev/null | head -5)
+            if [ -n "$ALTERNATIVES" ]; then
+                echo "Found potential kernel files:"
+                echo "$ALTERNATIVES"
+                # Use the first one found
+                KERNEL_SRC=$(echo "$ALTERNATIVES" | head -1)
+                echo "Using alternative kernel location: $KERNEL_SRC"
+            fi
+        fi
+        
+        if [ -z "$KERNEL_SRC" ] || [ ! -f "$KERNEL_SRC" ]; then
+            echo ""
+            error_msg "Kernel not found in system generation!"
+            echo "System path: $SYSTEM_PATH"
+            echo "Searched for: kernel, vmlinuz*, bzImage"
+            echo ""
+            echo "This usually means:"
+            echo "  1. The system build failed silently (check config.scm for kernel specification)"
+            echo "  2. AMD GPU firmware issues (amdgpu) may have caused build failure"
+            echo "  3. Nonguix channel may not be properly configured"
+            echo ""
+            echo "Please check:"
+            echo "  - /tmp/guix-install.log for build errors"
+            echo "  - config.scm has (kernel linux) or (kernel linux-libre) specified"
+            echo "  - channels.scm includes nonguix channel correctly"
+            exit 1
+        fi
+        
+        # Find initrd - try multiple possible locations
+        if [ -f "$SYSTEM_PATH/initrd" ]; then
+        INITRD_SRC="$SYSTEM_PATH/initrd"
+        else
+            echo "Initrd not found at $SYSTEM_PATH/initrd, trying alternative locations..."
+            # Try finding initrd in the store
+            ALTERNATIVES=$(find "$SYSTEM_PATH" -name 'initrd*' -o -name 'initramfs*' 2>/dev/null | head -5)
+            if [ -n "$ALTERNATIVES" ]; then
+                echo "Found potential initrd files:"
+                echo "$ALTERNATIVES"
+                # Use the first one found
+                INITRD_SRC=$(echo "$ALTERNATIVES" | head -1)
+                echo "Using alternative initrd location: $INITRD_SRC"
+            fi
+        fi
+        
+        if [ -z "$INITRD_SRC" ] || [ ! -f "$INITRD_SRC" ]; then
+            echo ""
+            error_msg "Initrd not found in system generation!"
+            echo "System path: $SYSTEM_PATH"
+            echo "Searched for: initrd*, initramfs*"
+            echo ""
+            echo "This usually means the system build failed silently."
+            echo "Please check /tmp/guix-install.log for errors"
+            exit 1
+        fi
+        
+        # Verify file sizes are reasonable (kernel > 5MB, initrd > 10MB)
+        KERNEL_SIZE=$(stat -f%z "$KERNEL_SRC" 2>/dev/null || stat -c%s "$KERNEL_SRC" 2>/dev/null || echo "0")
+        INITRD_SIZE=$(stat -f%z "$INITRD_SRC" 2>/dev/null || stat -c%s "$INITRD_SRC" 2>/dev/null || echo "0")
+        
+        if [ "$KERNEL_SIZE" -lt 5242880 ]; then
+            echo "[WARN] Kernel file is suspiciously small (%.1f MB) - may be corrupted" "$(echo "scale=1; $KERNEL_SIZE/1024/1024" | bc)"
+        fi
+        if [ "$INITRD_SIZE" -lt 10485760 ]; then
+            echo "[WARN] Initrd file is suspiciously small (%.1f MB) - may be corrupted" "$(echo "scale=1; $INITRD_SIZE/1024/1024" | bc)"
+        fi
+        
+        # Copy kernel (use -L to dereference symlinks)
+        cp -L "$KERNEL_SRC" /mnt/boot/vmlinuz
+        echo "[OK] Copied kernel: $KERNEL_SRC -> /mnt/boot/vmlinuz ($(echo "scale=1; $KERNEL_SIZE/1024/1024" | bc) MB)"
+        
+        # Verify kernel copy succeeded
+        if [ ! -f /mnt/boot/vmlinuz ]; then
+            error_msg "Kernel copy failed - file not found at destination!"
+                exit 1
+            fi
+        
+        # Copy initrd (use -L to dereference symlinks)
+        cp -L "$INITRD_SRC" /mnt/boot/initrd
+        echo "[OK] Copied initrd: $INITRD_SRC -> /mnt/boot/initrd ($(echo "scale=1; $INITRD_SIZE/1024/1024" | bc) MB)"
+        
+        # Verify initrd copy succeeded
+        if [ ! -f /mnt/boot/initrd ]; then
+            error_msg "Initrd copy failed - file not found at destination!"
+            exit 1
+        fi
+        
+        # Create symlink
+        rm -f /mnt/run/current-system
+        ln -s "$SYSTEM_PATH" /mnt/run/current-system
+        echo "[OK] Created current-system symlink"
+        
+        # Step 3: Install bootloader
+        echo ""
+        echo "=== Step 3/3: Installing Bootloader ==="
+        echo "System already built, this should be quick..."
+        echo ""
+        
+        # CRITICAL: Verify kernel/initrd exist BEFORE Step 3
+        # If they're missing, don't even try to install bootloader
+        if [ ! -f /mnt/boot/vmlinuz ] || [ ! -f /mnt/boot/initrd ]; then
+            echo ""
+            error_msg "Kernel/initrd files missing before bootloader install!"
+            echo "This should not happen - Step 2 should have copied them."
+            echo ""
+            echo "Kernel exists: $([ -f /mnt/boot/vmlinuz ] && echo 'YES' || echo 'NO')"
+            echo "Initrd exists: $([ -f /mnt/boot/initrd ] && echo 'YES' || echo 'NO')"
+            exit 1
+        fi
+        
+        if ! guix time-machine -C "$CHANNELS_PATH" -- system init --fallback -v6 /mnt/etc/config.scm /mnt --substitute-urls="https://substitutes.nonguix.org https://ci.guix.gnu.org https://bordeaux.guix.gnu.org"; then
+            error_msg "Bootloader installation failed!"
+            echo "However, kernel and initrd are already in place."
+            exit 1
+        fi
+        
+        # CRITICAL: Verify kernel/initrd still exist after Step 3
+        # guix system init can sometimes remove or overwrite files
+        # This matches the verification done in RunGuixSystemInit() for framework-dual
+        echo ""
+        echo "=== Verifying Kernel/Initrd After Bootloader Install ==="
+        KERNEL_STILL_MISSING=false
+        INITRD_STILL_MISSING=false
+        
+        if ! ls /mnt/boot/vmlinuz* >/dev/null 2>&1; then
+            echo "[WARN] Kernel missing after bootloader install - attempting recovery..."
+            KERNEL_STILL_MISSING=true
+        else
+            echo "[OK] Kernel still present: $(ls /mnt/boot/vmlinuz* | head -1 | xargs basename)"
+        fi
+        
+        if ! ls /mnt/boot/initrd* >/dev/null 2>&1; then
+            echo "[WARN] Initrd missing after bootloader install - attempting recovery..."
+            INITRD_STILL_MISSING=true
+        else
+            echo "[OK] Initrd still present: $(ls /mnt/boot/initrd* | head -1 | xargs basename)"
+        fi
+        
+        # If files are missing, recover from system generation
+        if [ "$KERNEL_STILL_MISSING" = true ] || [ "$INITRD_STILL_MISSING" = true ]; then
+            echo ""
+            echo "=== Recovering Missing Kernel/Initrd Files ==="
+            
+            # Use the system path we already found, or find it again
+            if [ -z "$SYSTEM_PATH" ] || [ ! -d "$SYSTEM_PATH" ]; then
+                # Try symlink first
+                if [ -L /mnt/run/current-system ]; then
+                    SYSTEM_PATH=$(readlink -f /mnt/run/current-system)
+                    echo "Found system generation via symlink: $SYSTEM_PATH"
+                else
+                    # Find most recent system generation
+                    SYSTEM_PATH=$(ls -td /gnu/store/*-system 2>/dev/null | head -1)
+                    if [ -n "$SYSTEM_PATH" ]; then
+                        echo "Found system generation: $SYSTEM_PATH"
+                    fi
+                fi
+            fi
+            
+            if [ -z "$SYSTEM_PATH" ] || [ ! -d "$SYSTEM_PATH" ]; then
+                error_msg "Could not find system generation to recover from!"
+                echo "System init may have failed silently."
+                exit 1
+            fi
+            
+            # Recover kernel if missing
+            if [ "$KERNEL_STILL_MISSING" = true ]; then
+                KERNEL_SRC="$SYSTEM_PATH/kernel"
+                if [ ! -f "$KERNEL_SRC" ]; then
+                    ALTERNATIVES=$(find "$SYSTEM_PATH" -name 'kernel' -o -name 'vmlinuz*' -o -name 'bzImage' 2>/dev/null | head -1)
+                    if [ -n "$ALTERNATIVES" ]; then
+                        KERNEL_SRC="$ALTERNATIVES"
+                    fi
+                fi
+                
+                if [ -f "$KERNEL_SRC" ]; then
+                    cp -L "$KERNEL_SRC" /mnt/boot/vmlinuz
+                    echo "[OK] Recovered kernel: $KERNEL_SRC -> /mnt/boot/vmlinuz"
+                    KERNEL_STILL_MISSING=false
+                else
+                    error_msg "Kernel not found in system generation: $SYSTEM_PATH"
+                fi
+            fi
+            
+            # Recover initrd if missing
+            if [ "$INITRD_STILL_MISSING" = true ]; then
+                INITRD_SRC="$SYSTEM_PATH/initrd"
+                if [ ! -f "$INITRD_SRC" ]; then
+                    ALTERNATIVES=$(find "$SYSTEM_PATH" -name 'initrd*' -o -name 'initramfs*' 2>/dev/null | head -1)
+                    if [ -n "$ALTERNATIVES" ]; then
+                        INITRD_SRC="$ALTERNATIVES"
+                    fi
+                fi
+                
+                if [ -f "$INITRD_SRC" ]; then
+                    cp -L "$INITRD_SRC" /mnt/boot/initrd
+                    echo "[OK] Recovered initrd: $INITRD_SRC -> /mnt/boot/initrd"
+                    INITRD_STILL_MISSING=false
+                else
+                    error_msg "Initrd not found in system generation: $SYSTEM_PATH"
+                fi
+            fi
+            
+            # Ensure symlink is correct
+            if [ ! -L /mnt/run/current-system ] || [ "$(readlink -f /mnt/run/current-system)" != "$SYSTEM_PATH" ]; then
+                rm -f /mnt/run/current-system
+                ln -s "$SYSTEM_PATH" /mnt/run/current-system
+                echo "[OK] Updated current-system symlink"
+            fi
+            
+            # Final check
+            if [ "$KERNEL_STILL_MISSING" = true ] || [ "$INITRD_STILL_MISSING" = true ]; then
+                echo ""
+                error_msg "Recovery failed - kernel/initrd still missing!"
+                echo "System will not boot without these files."
+                exit 1
+            else
+                echo ""
+                echo "[OK] Successfully recovered kernel/initrd files"
+            fi
+        fi
+    else
+        # Free software install: Use guix system init directly
+        # CRITICAL FIX: guix system build doesn't produce kernel/initrd files.
+        # We must use guix system init directly, which builds everything AND installs it.
+        echo ""
+        echo "=== Running System Init (Free Software) ==="
+        echo "This will take 5-30 minutes depending on substitutes..."
+        echo ""
+        echo "guix system init will:"
+        echo "  1. Build all packages (including kernel)"
+        echo "  2. Build initrd"
+        echo "  3. Install bootloader"
+        echo ""
+        
+        if ! guix system init --fallback -v6 /mnt/etc/config.scm /mnt --substitute-urls="https://ci.guix.gnu.org https://bordeaux.guix.gnu.org"; then
+            error_msg "System init failed!"
+            exit 1
+        fi
+        
+        # Verify kernel/initrd were created - if missing, try to recover
+        echo ""
+        echo "=== Verifying Installation (Post-Init) ==="
+        KERNEL_MISSING=false
+        INITRD_MISSING=false
+        
+        if ! ls /mnt/boot/vmlinuz* >/dev/null 2>&1; then
+            error_msg "Kernel not found after guix system init!"
+            KERNEL_MISSING=true
+        else
+            echo "[OK] Kernel found: $(ls /mnt/boot/vmlinuz* | head -1 | xargs basename)"
+        fi
+        
+        if ! ls /mnt/boot/initrd* >/dev/null 2>&1; then
+            error_msg "Initrd not found after guix system init!"
+            INITRD_MISSING=true
+        else
+            echo "[OK] Initrd found: $(ls /mnt/boot/initrd* | head -1 | xargs basename)"
+        fi
+        
+        # If kernel/initrd are missing, try to recover from system generation
+        if [ "$KERNEL_MISSING" = true ] || [ "$INITRD_MISSING" = true ]; then
+            echo ""
+            echo "=== Attempting Kernel/Initrd Recovery ==="
+            echo "System init reported success but files are missing."
+            echo "Attempting to recover from system generation..."
+            echo ""
+            
+            # Find the system generation
+            SYSTEM_PATH=""
+            if [ -L /mnt/run/current-system ]; then
+                SYSTEM_PATH=$(readlink -f /mnt/run/current-system)
+                echo "Found system generation via symlink: $SYSTEM_PATH"
+            else
+                # Try to find the most recent system generation
+                SYSTEM_PATH=$(ls -td /gnu/store/*-system 2>/dev/null | head -1)
+                if [ -n "$SYSTEM_PATH" ]; then
+                    echo "Found system generation: $SYSTEM_PATH"
+                fi
+            fi
+            
+            if [ -z "$SYSTEM_PATH" ] || [ ! -d "$SYSTEM_PATH" ]; then
+                error_msg "Could not find system generation to recover from!"
+                echo "System init may have failed silently."
+                echo ""
+                echo "Please check:"
+                echo "  1. /tmp/guix-install.log for errors"
+                echo "  2. Verify config.scm has (kernel linux-libre) specified"
+                echo "  3. Try re-running: guix system init /mnt/etc/config.scm /mnt"
+                exit 1
+            fi
+            
+            # Try to copy kernel
+            if [ "$KERNEL_MISSING" = true ]; then
+                KERNEL_SRC="$SYSTEM_PATH/kernel"
+                if [ ! -f "$KERNEL_SRC" ]; then
+                    # Try alternative locations
+                    ALTERNATIVES=$(find "$SYSTEM_PATH" -name 'kernel' -o -name 'vmlinuz*' -o -name 'bzImage' 2>/dev/null | head -1)
+                    if [ -n "$ALTERNATIVES" ]; then
+                        KERNEL_SRC="$ALTERNATIVES"
+                    fi
+                fi
+                
+                if [ -f "$KERNEL_SRC" ]; then
+                    cp -L "$KERNEL_SRC" /mnt/boot/vmlinuz
+                    echo "[OK] Recovered kernel: $KERNEL_SRC -> /mnt/boot/vmlinuz"
+                    KERNEL_MISSING=false
+                else
+                    error_msg "Kernel not found in system generation: $SYSTEM_PATH"
+                fi
+            fi
+            
+            # Try to copy initrd
+            if [ "$INITRD_MISSING" = true ]; then
+                INITRD_SRC="$SYSTEM_PATH/initrd"
+                if [ ! -f "$INITRD_SRC" ]; then
+                    # Try alternative locations
+                    ALTERNATIVES=$(find "$SYSTEM_PATH" -name 'initrd*' -o -name 'initramfs*' 2>/dev/null | head -1)
+                    if [ -n "$ALTERNATIVES" ]; then
+                        INITRD_SRC="$ALTERNATIVES"
+                    fi
+                fi
+                
+                if [ -f "$INITRD_SRC" ]; then
+                    cp -L "$INITRD_SRC" /mnt/boot/initrd
+                    echo "[OK] Recovered initrd: $INITRD_SRC -> /mnt/boot/initrd"
+                    INITRD_MISSING=false
+                else
+                    error_msg "Initrd not found in system generation: $SYSTEM_PATH"
+                fi
+            fi
+            
+            # Create symlink if missing
+            if [ ! -L /mnt/run/current-system ]; then
+                rm -f /mnt/run/current-system
+                ln -s "$SYSTEM_PATH" /mnt/run/current-system
+                echo "[OK] Created current-system symlink"
+            fi
+            
+            # Final check
+            if [ "$KERNEL_MISSING" = true ] || [ "$INITRD_MISSING" = true ]; then
+                echo ""
+                error_msg "Recovery failed - kernel/initrd still missing!"
+                echo "System will not boot without these files."
+                echo ""
+                echo "Please check:"
+                echo "  1. /tmp/guix-install.log for errors"
+                echo "  2. Verify config.scm has (kernel linux-libre) specified"
+                echo "  3. Try re-running: guix system init /mnt/etc/config.scm /mnt"
+            exit 1
+            else
+                echo ""
+                echo "[OK] Successfully recovered kernel/initrd files"
+            fi
+        fi
+    fi
+    
+    # Final verification (for both paths)
+    echo ""
+    echo "=== Final Verification ==="
+    
+    if ! ls /mnt/boot/vmlinuz* >/dev/null 2>&1; then
+        error_msg "Kernel still missing after installation!"
+        exit 1
+    fi
+    echo "[OK] Kernel present: $(ls /mnt/boot/vmlinuz* | head -1 | xargs basename)"
+    
+    if ! ls /mnt/boot/initrd* >/dev/null 2>&1; then
+        error_msg "Initrd still missing after installation!"
+        exit 1
+    fi
+    echo "[OK] Initrd present: $(ls /mnt/boot/initrd* | head -1 | xargs basename)"
+    
+    echo "[OK] Installation verification complete"
+else
+    echo ""
+    echo "[OK] System init already complete - skipping"
+fi
+
+# Get username from config
+echo ""
+echo "=== Detecting Username ==="
+USERNAME=$(grep -oP '(?<=\(name ")[^"]+' /mnt/etc/config.scm | head -1)
+if [ -z "$USERNAME" ]; then
+    echo "[WARN] Could not detect username from config.scm"
+    read -p "Enter your username: " USERNAME </dev/tty
+fi
+echo "Username: $USERNAME"
+
+# Set user password
+echo ""
+echo "=== Setting User Password ==="
+echo "You need this password to log in after first boot."
+echo ""
+
+# Check if password is already set
+PASSWORD_SET=false
+if chroot /mnt /run/current-system/profile/bin/bash -c "grep '^$USERNAME:' /etc/shadow | grep -v ':!:'" >/dev/null 2>&1; then
+    echo "[OK] Password already set for $USERNAME. Skipping password setup."
+    PASSWORD_SET=true
+fi
+
+if [ "$PASSWORD_SET" = false ]; then
+    if chroot /mnt /run/current-system/profile/bin/passwd "$USERNAME"; then
+        echo ""
+        echo "[OK] Password set successfully for $USERNAME"
+    else
+        echo ""
+        error_msg "Failed to set password!"
+        echo "You can set it manually after first boot."
+    fi
+fi
+
+# Detect platform if not set (similar to verify script)
+detect_platform() {
+    # Use environment variable if set
+    if [ -n "$GUIX_PLATFORM" ]; then
+        echo "$GUIX_PLATFORM"
+        return
+    fi
+    
+    # Check for channels.scm (framework-dual/framework use nonguix)
+    if [ -f ~/channels.scm ] || [ -f /tmp/channels.scm ]; then
+        echo "framework-dual"
+        return
+    fi
+    
+    # Check for dual-boot (GUIX_ROOT filesystem with separate EFI)
+    if mountpoint -q /mnt && [ -f /proc/mounts ]; then
+        if grep -q "GUIX_ROOT" /proc/mounts && grep -q "/boot/efi" /proc/mounts; then
+            echo "framework-dual"
+            return
+        fi
+    fi
+    
+    # Check for VPS vendors (cloudzy)
+    if [ -f /sys/class/dmi/id/sys_vendor ]; then
+        vendor=$(cat /sys/class/dmi/id/sys_vendor 2>/dev/null | tr '[:upper:]' '[:lower:]')
+        if echo "$vendor" | grep -qE "cloudzy|ovh|digitalocean|vultr"; then
+            echo "cloudzy"
+            return
+        fi
+    fi
+    
+    # Default to cloudzy (most common VPS case)
+    echo "cloudzy"
+}
+
+# Download customization tools
+echo ""
+echo "=== Downloading Customization Tools ==="
+PLATFORM=$(detect_platform)
+echo "[INFO] Detected platform: $PLATFORM"
+USER_HOME="/mnt/home/$USERNAME"
+CUSTOMIZE_DIR="$USER_HOME/guix-customize"
+
+if [ -d "$CUSTOMIZE_DIR" ]; then
+    echo "[OK] Customization tools already present at $CUSTOMIZE_DIR"
+else
+    echo "Downloading to $CUSTOMIZE_DIR..."
+    mkdir -p "$CUSTOMIZE_DIR"
+
+    # Download customize script
+    REPO_BASE="https://raw.githubusercontent.com/durantschoon/guix-platform-install/main"
+    if wget -q -O "$CUSTOMIZE_DIR/customize" "$REPO_BASE/$PLATFORM/postinstall/customize"; then
+        chmod +x "$CUSTOMIZE_DIR/customize"
+        echo "[OK] Downloaded customize script"
+    else
+        echo "[WARN] Failed to download customization tools"
+        echo "      You can download manually after first boot"
+    fi
+
+    # Set ownership
+    chroot /mnt /run/current-system/profile/bin/chown -R "$USERNAME:users" "/home/$USERNAME/guix-customize" 2>/dev/null || true
+fi
+
+# Configure dual-boot GRUB (if framework-dual)
+if [ "$PLATFORM" = "framework-dual" ]; then
+    echo ""
+    echo "=== Configuring Dual-Boot GRUB ==="
+
+    # Check if os-prober is available in the installed system
+    if chroot /mnt /run/current-system/profile/bin/bash -c "command -v os-prober" >/dev/null 2>&1; then
+        echo "Enabling os-prober..."
+        chroot /mnt /run/current-system/profile/bin/bash -c 'echo "GRUB_DISABLE_OS_PROBER=false" >> /etc/default/grub' 2>/dev/null || true
+
+        echo "Running os-prober to detect Pop!_OS..."
+        chroot /mnt /run/current-system/profile/bin/os-prober || true
+
+        echo "Updating GRUB configuration..."
+        chroot /mnt /run/current-system/profile/bin/grub-mkconfig -o /boot/grub/grub.cfg || {
+            echo "[WARN] Failed to update GRUB config"
+            echo "      You can run this after first boot:"
+            echo "      sudo os-prober && sudo grub-mkconfig -o /boot/grub/grub.cfg"
+        }
+    else
+        echo "[WARN] os-prober not found in installed system"
+        echo "      You'll need to manually configure dual-boot after first boot"
+    fi
+fi
+
+# Write installation receipt
+echo ""
+echo "=== Writing Installation Receipt ==="
+RECEIPT_PATH="/mnt/root/install-receipt.txt"
+cat > "$RECEIPT_PATH" <<EOF
+Guix System Installation Receipt
+=================================
+Date: $(date)
+Platform: $PLATFORM
+Username: $USERNAME
+Hostname: $(grep 'host-name' /mnt/etc/config.scm | grep -oP '(?<=")[^"]+')
+
+Installation completed via recovery script.
+
+Config: /etc/config.scm
+Channels: $([ -f ~/channels.scm ] && echo "~/channels.scm (nonguix)" || ([ -f /tmp/channels.scm ] && echo "/tmp/channels.scm (nonguix)" || echo "default"))
+
+Next steps:
+1. Log in with your username and password
+2. Run: ~/guix-customize/customize (to add SSH, desktop, packages)
+3. For dual-boot: Access Pop!_OS via F12 boot menu or GRUB menu
+
+Installation log: /tmp/guix-install.log (if available)
+EOF
+echo "[OK] Installation receipt written to $RECEIPT_PATH"
+
+# Mark that we're about to run verification explicitly
+# This prevents the trap from running it again
+RUN_VERIFICATION_ON_EXIT=false
+
+# Run final verification explicitly
+run_final_verification
+
+echo ""
+if [ "$VERIFICATION_PASSED" = true ]; then
+    echo "=== Installation Complete! ==="
+    echo ""
+    echo "The system is ready to boot."
+    echo ""
+    echo "Next steps:"
+    echo "  1. Sync and unmount:"
+    echo "     sync"
+    echo "     umount -R /mnt"
+    echo "  2. Reboot:"
+    echo "     reboot"
+    echo ""
+    echo "After first boot:"
+    echo "  - Log in with username: $USERNAME"
+    echo "  - Run: ~/guix-customize/customize"
+    echo "  - For Pop!_OS: Press F12 at boot or select from GRUB menu"
+    echo ""
+
+    read -p "Unmount and reboot now? [y/N] " -r </dev/tty
+    if [[ $REPLY =~ ^[Yy]$ ]]; then
+        sync
+        umount -R /mnt
+        reboot
+    else
+        echo ""
+        echo "Remember to unmount before rebooting:"
+        echo "  sync && umount -R /mnt && reboot"
+    fi
+else
+    echo "=== Installation INCOMPLETE ==="
+    echo ""
+    echo "Critical files are missing. DO NOT REBOOT."
+    echo ""
+    show_error_summary
+    echo "Please review the errors above and:"
+    echo "  1. Check /tmp/guix-install.log for errors"
+    echo "  2. Try re-running the system init manually"
+    echo "  3. Or re-run this recovery script"
+    exit 1
+fi

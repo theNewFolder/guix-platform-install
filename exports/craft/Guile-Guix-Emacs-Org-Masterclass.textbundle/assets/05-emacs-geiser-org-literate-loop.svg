@@ -1,0 +1,207 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1000" width="1600" height="1000">
+  <defs>
+    <!-- Blueprint subtle grid -->
+    <pattern id="smallGrid" width="20" height="20" patternUnits="userSpaceOnUse">
+      <path d="M 20 0 L 0 0 0 20" fill="none" stroke="#232738" stroke-width="0.6" stroke-opacity="0.55"/>
+    </pattern>
+    <pattern id="largeGrid" width="100" height="100" patternUnits="userSpaceOnUse">
+      <rect width="100" height="100" fill="url(#smallGrid)"/>
+      <path d="M 100 0 L 0 0 0 100" fill="none" stroke="#2f3549" stroke-width="1" stroke-opacity="0.65"/>
+    </pattern>
+
+    <!-- Soft drop shadow -->
+    <filter id="shadow" x="-6%" y="-6%" width="112%" height="116%">
+      <feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#0a0b10" flood-opacity="0.65"/>
+    </filter>
+    <filter id="shadowSm" x="-6%" y="-6%" width="112%" height="116%">
+      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0a0b10" flood-opacity="0.5"/>
+    </filter>
+
+    <!-- Header gradient -->
+    <linearGradient id="headerGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#1f2335"/>
+      <stop offset="50%" stop-color="#24283b"/>
+      <stop offset="100%" stop-color="#1f2335"/>
+    </linearGradient>
+
+    <!-- Arrow markers for each accent color -->
+    <marker id="arrow-blue" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 1.5 L 9 5 L 0 8.5 z" fill="#7aa2f7"/>
+    </marker>
+    <marker id="arrow-cyan" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 1.5 L 9 5 L 0 8.5 z" fill="#7dcfff"/>
+    </marker>
+    <marker id="arrow-green" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 1.5 L 9 5 L 0 8.5 z" fill="#9ece6a"/>
+    </marker>
+    <marker id="arrow-magenta" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 1.5 L 9 5 L 0 8.5 z" fill="#bb9af7"/>
+    </marker>
+    <marker id="arrow-amber" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 1.5 L 9 5 L 0 8.5 z" fill="#e0af68"/>
+    </marker>
+    <marker id="arrow-orange" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 1.5 L 9 5 L 0 8.5 z" fill="#ff9e64"/>
+    </marker>
+    <marker id="arrow-red" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 1.5 L 9 5 L 0 8.5 z" fill="#f7768e"/>
+    </marker>
+    <marker id="arrow-fg" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 1.5 L 9 5 L 0 8.5 z" fill="#a9b1d6"/>
+    </marker>
+  </defs>
+
+  <!-- Canvas Background -->
+  <rect width="1600" height="1000" fill="#1a1b26"/>
+  <rect width="1600" height="1000" fill="url(#largeGrid)"/>
+
+  <!-- Outer Frame -->
+  <rect x="12" y="12" width="1576" height="976" rx="12" fill="none" stroke="#414868" stroke-width="1.5"/>
+
+  <!-- Top Title Banner -->
+  <rect x="24" y="22" width="1552" height="74" rx="10" fill="url(#headerGrad)" stroke="#414868" stroke-width="1.5" filter="url(#shadowSm)"/>
+  <rect x="24" y="22" width="8" height="74" rx="4" fill="#7aa2f7"/>
+  <text x="48" y="53" font-family="'Avenir Next', 'Helvetica Neue', -apple-system, BlinkMacSystemFont, sans-serif" font-size="22" font-weight="800" fill="#ffffff" letter-spacing="0.8">THE LITERATE LISP WORKSTATION LOOP: ORG-MODE + EMACS + GEISER REPL + GUIX</text>
+  <text x="48" y="79" font-family="'Avenir Next', 'Helvetica Neue', -apple-system, BlinkMacSystemFont, sans-serif" font-size="13.5" font-weight="500" fill="#7dcfff" letter-spacing="0.3">Single Source of Truth (system.org) — Millisecond Live REPL Evaluation vs Declarative Tangling &amp; Atomic Generations</text>
+
+  <!-- Top-Right Tag Pill -->
+  <rect x="1270" y="36" width="290" height="30" rx="6" fill="#16161e" stroke="#414868" stroke-width="1"/>
+  <text x="1415" y="56" text-anchor="middle" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="11.5" font-weight="700" fill="#bb9af7">DIAGRAM 05 · LITERATE WORKSTATION LOOP</text>
+
+<g>
+  <rect x="24" y="112" width="480" height="720" rx="10" fill="#1f2335" stroke="#414868" stroke-width="1.5" filter="url(#shadow)"/>
+  <rect x="24" y="112" width="480" height="36" rx="10" fill="#16161e" stroke="#7dcfff" stroke-width="1.2"/>
+  <rect x="24" y="112" width="8" height="36" rx="4" fill="#7dcfff"/>
+  <text x="42" y="135" font-family="'Avenir Next', 'Helvetica Neue', -apple-system, BlinkMacSystemFont, sans-serif" font-size="13.5" font-weight="700" fill="#7dcfff" letter-spacing="0.4">FAST LOOP: LIVE GEISER REPL</text>
+  <rect x="371.0" y="118" width="123.0" height="24" rx="5" fill="#24283b" stroke="#7dcfff" stroke-width="1"/>
+  <text x="432.5" y="134" text-anchor="middle" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="10.5" font-weight="700" fill="#ffffff">C-c C-c · EVAL</text>
+</g>
+<g>
+  <rect x="528" y="112" width="544" height="720" rx="10" fill="#1f2335" stroke="#414868" stroke-width="1.5" filter="url(#shadow)"/>
+  <rect x="528" y="112" width="544" height="36" rx="10" fill="#16161e" stroke="#bb9af7" stroke-width="1.2"/>
+  <rect x="528" y="112" width="8" height="36" rx="4" fill="#bb9af7"/>
+  <text x="546" y="135" font-family="'Avenir Next', 'Helvetica Neue', -apple-system, BlinkMacSystemFont, sans-serif" font-size="13.5" font-weight="700" fill="#bb9af7" letter-spacing="0.4">SINGLE SOURCE OF TRUTH: system.org</text>
+  <rect x="946.5" y="118" width="115.5" height="24" rx="5" fill="#24283b" stroke="#bb9af7" stroke-width="1"/>
+  <text x="1004.2" y="134" text-anchor="middle" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="10.5" font-weight="700" fill="#ffffff">ORG-BABEL HUB</text>
+</g>
+<g>
+  <rect x="1096" y="112" width="480" height="720" rx="10" fill="#1f2335" stroke="#414868" stroke-width="1.5" filter="url(#shadow)"/>
+  <rect x="1096" y="112" width="480" height="36" rx="10" fill="#16161e" stroke="#9ece6a" stroke-width="1.2"/>
+  <rect x="1096" y="112" width="8" height="36" rx="4" fill="#9ece6a"/>
+  <text x="1114" y="135" font-family="'Avenir Next', 'Helvetica Neue', -apple-system, BlinkMacSystemFont, sans-serif" font-size="13.5" font-weight="700" fill="#9ece6a" letter-spacing="0.4">DEPLOY LOOP: TANGLE &amp; GENERATIONS</text>
+  <rect x="1413.0" y="118" width="153.0" height="24" rx="5" fill="#24283b" stroke="#9ece6a" stroke-width="1"/>
+  <text x="1489.5" y="134" text-anchor="middle" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="10.5" font-weight="700" fill="#ffffff">C-c C-v t · TANGLE</text>
+</g>
+<text x="548" y="170" font-family="'Avenir Next', 'Helvetica Neue', -apple-system, BlinkMacSystemFont, sans-serif" font-size="13" font-weight="700" fill="#ffffff">Literate Configuration Buffer (<tspan font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" fill="#bb9af7">~/dotfiles/system.org</tspan>)</text>
+<text x="548" y="190" font-family="'Avenir Next', 'Helvetica Neue', -apple-system, BlinkMacSystemFont, sans-serif" font-size="12" fill="#a9b1d6">Prose documentation, architecture rationale, and executable Scheme blocks in one file:</text>
+<rect x="548" y="204" width="504" height="466" rx="8" fill="#16161e" stroke="#bb9af7" stroke-width="1.8" filter="url(#shadowSm)"/>
+<rect x="548" y="204" width="504" height="28" rx="8" fill="#292e42" stroke="#bb9af7" stroke-width="1"/>
+<circle cx="566" cy="218" r="5" fill="#f7768e"/>
+<circle cx="582" cy="218" r="5" fill="#e0af68"/>
+<circle cx="598" cy="218" r="5" fill="#9ece6a"/>
+<text x="800" y="222" text-anchor="middle" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="11" font-weight="700" fill="#ffffff">GNU Emacs — system.org (Org + Paredit + Geiser)</text>
+<text x="564" y="248" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="11" font-weight="700" fill="#ffffff">#+TITLE: Literate Guix Workstation &amp; Home</text>
+<text x="564" y="262.8" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="11" font-weight="500" fill="#7dcfff">#+PROPERTY: header-args:scheme :session *guix-repl*</text>
+<text x="564" y="292.40000000000003" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="11" font-weight="700" fill="#bb9af7">* 1. Interactive Package &amp; G-Exp Sandbox</text>
+<text x="564" y="307.20000000000005" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="11" font-weight="500" fill="#565f89">#+begin_src scheme :tangle no</text>
+<text x="578" y="322.00000000000006" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="11" font-weight="500" fill="#7aa2f7">(use-modules (gnu packages emacs) (guix gexp))</text>
+<text x="578" y="336.80000000000007" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="11" font-weight="500" fill="#7dcfff">(package-version emacs-pgtk) ;; Press C-c C-c!</text>
+<text x="564" y="351.6000000000001" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="11" font-weight="500" fill="#565f89">#+end_src</text>
+<text x="564" y="366.4000000000001" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="11" font-weight="700" fill="#9ece6a">#+RESULTS: &quot;30.1&quot;</text>
+<text x="564" y="396.0000000000001" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="11" font-weight="700" fill="#e0af68">* 2. Operating System Declaration (PID 1 &amp; Kernel)</text>
+<text x="564" y="410.8000000000001" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="11" font-weight="700" fill="#e0af68">#+begin_src scheme :tangle config.scm</text>
+<text x="578" y="425.60000000000014" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="11" font-weight="500" fill="#ffffff">(operating-system (host-name &quot;guix-station&quot;)</text>
+<text x="592" y="440.40000000000015" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="11" font-weight="500" fill="#a9b1d6">(timezone &quot;Asia/Dubai&quot;) (bootloader ...)</text>
+<text x="592" y="455.20000000000016" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="11" font-weight="500" fill="#a9b1d6">(services (cons* (service openssh-service-type)</text>
+<text x="683" y="470.00000000000017" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="11" font-weight="500" fill="#a9b1d6">%desktop-services)))</text>
+<text x="564" y="484.8000000000002" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="11" font-weight="500" fill="#565f89">#+end_src</text>
+<text x="564" y="514.4000000000002" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="11" font-weight="700" fill="#9ece6a">* 3. User Environment &amp; Shepherd Daemons</text>
+<text x="564" y="529.2000000000002" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="11" font-weight="700" fill="#9ece6a">#+begin_src scheme :tangle home-configuration.scm</text>
+<text x="578" y="544.0000000000001" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="11" font-weight="500" fill="#ffffff">(home-environment (packages ...)</text>
+<text x="592" y="558.8000000000001" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="11" font-weight="500" fill="#a9b1d6">(services (list (service home-zsh-service-type ...))))</text>
+<text x="564" y="573.6" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="11" font-weight="500" fill="#565f89">#+end_src</text>
+<text x="564" y="603.1999999999999" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="11" font-weight="700" fill="#7aa2f7">* 4. Project Development Toolchain Manifest</text>
+<text x="564" y="617.9999999999999" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="11" font-weight="700" fill="#7aa2f7">#+begin_src scheme :tangle manifest.scm</text>
+<text x="578" y="632.7999999999998" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="11" font-weight="500" fill="#ffffff">(specifications-&gt;manifest &#x27;(&quot;guile@3.0.9&quot; &quot;gcc-toolchain&quot;))</text>
+<text x="564" y="647.5999999999998" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="11" font-weight="500" fill="#565f89">#+end_src</text>
+<rect x="548" y="684" width="504" height="130" rx="8" fill="#292e42" stroke="#414868" stroke-width="1.4"/>
+<text x="566" y="708" font-family="'Avenir Next', 'Helvetica Neue', -apple-system, BlinkMacSystemFont, sans-serif" font-size="13" font-weight="700" fill="#bb9af7">EMACS LISP STRUCTURAL EDITING SUPERPOWERS</text>
+<text x="566" y="732" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="11.5" fill="#c0caf5">• <tspan fill="#7dcfff">C-c '</tspan> (<tspan fill="#7dcfff">org-edit-special</tspan>): Opens block in native <tspan fill="#bb9af7">scheme-mode</tspan> buffer</text>
+<text x="566" y="754" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="11.5" fill="#c0caf5">• <tspan fill="#e0af68">Paredit / Smartparens</tspan>: <tspan fill="#e0af68">C-)</tspan> slurp, <tspan fill="#e0af68">C-}</tspan> barf, <tspan fill="#e0af68">M-s</tspan> splice — AST-safe editing</text>
+<text x="566" y="776" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="11.5" fill="#c0caf5">• <tspan fill="#9ece6a">Corfu + Cape + Eldoc</tspan>: Live Guix package/service symbol completion &amp; arity</text>
+<text x="566" y="798" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="11.5" fill="#c0caf5">• <tspan fill="#7aa2f7">Vertico + Consult + Marginalia</tspan>: Instant fuzzy search across all headings</text>
+<text x="44" y="170" font-family="'Avenir Next', 'Helvetica Neue', -apple-system, BlinkMacSystemFont, sans-serif" font-size="13" font-weight="700" fill="#ffffff">Interactive Exploration without Rebuilding the OS</text>
+<text x="44" y="190" font-family="'Avenir Next', 'Helvetica Neue', -apple-system, BlinkMacSystemFont, sans-serif" font-size="12" fill="#a9b1d6">Evaluates S-expressions over Unix domain socket in a live Guix REPL:</text>
+<rect x="44" y="206" width="440" height="108" rx="8" fill="#292e42" stroke="#7dcfff" stroke-width="1.6"/>
+<text x="62" y="230" font-family="'Avenir Next', 'Helvetica Neue', -apple-system, BlinkMacSystemFont, sans-serif" font-size="13.5" font-weight="700" fill="#7dcfff">1. Geiser + ob-scheme Bridge (*guix-repl*)</text>
+<text x="62" y="254" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="11.2" fill="#c0caf5">• Started via <tspan fill="#9ece6a">M-x geiser-guile</tspan> or <tspan fill="#9ece6a">guix repl --listen=...</tspan></text>
+<text x="62" y="276" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="11.2" fill="#c0caf5">• Preloads full <tspan fill="#e0af68">%load-path</tspan> of pinned Guix channels</text>
+<text x="62" y="298" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="11.2" fill="#c0caf5">• Keys: <tspan fill="#7dcfff">C-c C-c</tspan> (block), <tspan fill="#7dcfff">C-M-x</tspan> (defn), <tspan fill="#7dcfff">C-x C-e</tspan> (sexp)</text>
+<path d="M 264 314 L 264 338" stroke="#7dcfff" stroke-width="2.2" marker-end="url(#arrow-cyan)"/>
+<rect x="44" y="342" width="440" height="224" rx="8" fill="#16161e" stroke="#7aa2f7" stroke-width="1.6"/>
+<text x="62" y="368" font-family="'Avenir Next', 'Helvetica Neue', -apple-system, BlinkMacSystemFont, sans-serif" font-size="13.5" font-weight="700" fill="#7aa2f7">2. Live Guix REPL Introspection &amp; Metaprogramming</text>
+<text x="62" y="392" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="11" fill="#565f89">;; Query package DAG &amp; inputs in &lt; 2 ms:</text>
+<text x="62" y="407.5" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="11" fill="#ffffff">scheme@(guix-user)&gt; (package-direct-inputs shepherd)</text>
+<text x="62" y="423.0" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="11" fill="#9ece6a">⇒ ((&quot;guile&quot; #&lt;package guile@3.0.9&gt;) (&quot;fibers&quot; ...))</text>
+<text x="62" y="454.0" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="11" fill="#565f89">;; Expand macros &amp; inspect lowered derivations:</text>
+<text x="62" y="469.5" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="11" fill="#7dcfff">scheme@(guix-user)&gt; ,expand (service ssh-service-type)</text>
+<text x="62" y="485.0" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="11" fill="#e0af68">scheme@(guix-user)&gt; ,lower emacs-pgtk</text>
+<text x="62" y="500.5" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="11" fill="#9ece6a">⇒ #&lt;derivation /gnu/store/...-emacs-pgtk-30.1.drv&gt;</text>
+<text x="62" y="531.5" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="11" fill="#565f89">;; Jump straight to package source definition in Guix:</text>
+<text x="62" y="547.0" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="11" fill="#bb9af7">Press M-. (xref-find-definitions) on any symbol!</text>
+<path d="M 264 566 L 264 590" stroke="#7aa2f7" stroke-width="2.2" marker-end="url(#arrow-green)"/>
+<rect x="44" y="594" width="440" height="110" rx="8" fill="#292e42" stroke="#9ece6a" stroke-width="1.6"/>
+<text x="62" y="620" font-family="'Avenir Next', 'Helvetica Neue', -apple-system, BlinkMacSystemFont, sans-serif" font-size="13.5" font-weight="700" fill="#9ece6a">3. Instant Feedback Loop into system.org</text>
+<text x="62" y="644" font-family="'Avenir Next', 'Helvetica Neue', -apple-system, BlinkMacSystemFont, sans-serif" font-size="12" fill="#c0caf5">• Captures evaluation return values directly under <tspan font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" fill="#9ece6a">#+RESULTS:</tspan></text>
+<text x="62" y="666" font-family="'Avenir Next', 'Helvetica Neue', -apple-system, BlinkMacSystemFont, sans-serif" font-size="12" fill="#c0caf5">• Catches unbound symbols or wrong record fields BEFORE</text>
+<text x="62" y="686" font-family="'Avenir Next', 'Helvetica Neue', -apple-system, BlinkMacSystemFont, sans-serif" font-size="12" fill="#c0caf5">  ever running <tspan font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" fill="#e0af68">guix system reconfigure</tspan>!</text>
+<path d="M 528 310 L 486 260" stroke="#7dcfff" stroke-width="2.5" marker-end="url(#arrow-cyan)"/>
+<path d="M 486 648 L 528 360" stroke="#9ece6a" stroke-width="2.2" stroke-dasharray="5,3" marker-end="url(#arrow-green)"/>
+<text x="1116" y="170" font-family="'Avenir Next', 'Helvetica Neue', -apple-system, BlinkMacSystemFont, sans-serif" font-size="13" font-weight="700" fill="#ffffff">Deterministic Extraction (<tspan font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" fill="#9ece6a">org-babel-tangle</tspan> / <tspan font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" fill="#9ece6a">C-c C-v t</tspan>)</text>
+<text x="1116" y="190" font-family="'Avenir Next', 'Helvetica Neue', -apple-system, BlinkMacSystemFont, sans-serif" font-size="12" fill="#a9b1d6">Extracts pure <tspan font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" fill="#e0af68">.scm</tspan> targets and builds transactional system/user generations:</text>
+<rect x="1116" y="208" width="440" height="180" rx="8" fill="#292e42" stroke="#e0af68" stroke-width="1.6" filter="url(#shadowSm)"/>
+<text x="1134" y="234" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="13" font-weight="700" fill="#e0af68">TARGET 1: config.scm</text>
+<rect x="1420" y="216" width="124" height="22" rx="11.0" fill="#16161e" stroke="#e0af68" stroke-width="1.2"/><text x="1482.0" y="230.7" text-anchor="middle" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="11" font-weight="700" fill="#e0af68">OS GENERATION</text>
+<rect x="1134" y="246" width="404" height="28" rx="5" fill="#16161e" stroke="#414868" stroke-width="1"/>
+<text x="1146" y="264" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="11" font-weight="700" fill="#ffffff">$ sudo guix system reconfigure config.scm</text>
+<text x="1134" y="298" font-family="'Avenir Next', 'Helvetica Neue', -apple-system, BlinkMacSystemFont, sans-serif" font-size="12" font-weight="700" fill="#c0caf5">Builds /var/guix/profiles/system-N-link:</text>
+<text x="1134" y="322" font-family="'Avenir Next', 'Helvetica Neue', -apple-system, BlinkMacSystemFont, sans-serif" font-size="11.5" fill="#a9b1d6">• Kernel + initrd + GRUB menu entry (atomic rollback)</text>
+<text x="1134" y="344" font-family="'Avenir Next', 'Helvetica Neue', -apple-system, BlinkMacSystemFont, sans-serif" font-size="11.5" fill="#a9b1d6">• Shepherd PID 1 service graph + immutable /etc</text>
+<text x="1134" y="370" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="10.8" font-weight="700" fill="#7dcfff">↺ Instant rollback: --roll-back or GRUB menu selection</text>
+<rect x="1116" y="408" width="440" height="180" rx="8" fill="#292e42" stroke="#9ece6a" stroke-width="1.6" filter="url(#shadowSm)"/>
+<text x="1134" y="434" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="13" font-weight="700" fill="#9ece6a">TARGET 2: home-configuration.scm</text>
+<rect x="1420" y="416" width="124" height="22" rx="11.0" fill="#16161e" stroke="#9ece6a" stroke-width="1.2"/><text x="1482.0" y="430.7" text-anchor="middle" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="11" font-weight="700" fill="#9ece6a">HOME GENERATION</text>
+<rect x="1134" y="446" width="404" height="28" rx="5" fill="#16161e" stroke="#414868" stroke-width="1"/>
+<text x="1146" y="464" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="11" font-weight="700" fill="#ffffff">$ guix home reconfigure home-configuration.scm</text>
+<text x="1134" y="498" font-family="'Avenir Next', 'Helvetica Neue', -apple-system, BlinkMacSystemFont, sans-serif" font-size="12" font-weight="700" fill="#c0caf5">Builds ~/.guix-home generation symlink:</text>
+<text x="1134" y="522" font-family="'Avenir Next', 'Helvetica Neue', -apple-system, BlinkMacSystemFont, sans-serif" font-size="11.5" fill="#a9b1d6">• Symlinks ~/.config/*, ~/.zshrc, ~/.emacs.d/init.el</text>
+<text x="1134" y="544" font-family="'Avenir Next', 'Helvetica Neue', -apple-system, BlinkMacSystemFont, sans-serif" font-size="11.5" fill="#a9b1d6">• Reconfigures user Shepherd daemons without rebooting</text>
+<text x="1134" y="570" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="10.8" font-weight="700" fill="#7dcfff">↺ Instant rollback: --roll-back or GRUB menu selection</text>
+<rect x="1116" y="608" width="440" height="180" rx="8" fill="#292e42" stroke="#7aa2f7" stroke-width="1.6" filter="url(#shadowSm)"/>
+<text x="1134" y="634" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="13" font-weight="700" fill="#7aa2f7">TARGET 3: manifest.scm</text>
+<rect x="1420" y="616" width="124" height="22" rx="11.0" fill="#16161e" stroke="#7aa2f7" stroke-width="1.2"/><text x="1482.0" y="630.7" text-anchor="middle" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="11" font-weight="700" fill="#7aa2f7">DEV / CONTAINER</text>
+<rect x="1134" y="646" width="404" height="28" rx="5" fill="#16161e" stroke="#414868" stroke-width="1"/>
+<text x="1146" y="664" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="11" font-weight="700" fill="#ffffff">$ guix shell -m manifest.scm  |  guix pack -f docker</text>
+<text x="1134" y="698" font-family="'Avenir Next', 'Helvetica Neue', -apple-system, BlinkMacSystemFont, sans-serif" font-size="12" font-weight="700" fill="#c0caf5">Builds isolated, reproducible software profile:</text>
+<text x="1134" y="722" font-family="'Avenir Next', 'Helvetica Neue', -apple-system, BlinkMacSystemFont, sans-serif" font-size="11.5" fill="#a9b1d6">• Ephemeral project shell (direnv + envrc integration)</text>
+<text x="1134" y="744" font-family="'Avenir Next', 'Helvetica Neue', -apple-system, BlinkMacSystemFont, sans-serif" font-size="11.5" fill="#a9b1d6">• Exports bit-for-bit reproducible Docker/OCI images</text>
+<text x="1134" y="770" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="10.8" font-weight="700" fill="#7dcfff">↺ Instant rollback: --roll-back or GRUB menu selection</text>
+<path d="M 1052 405 L 1114 295" stroke="#e0af68" stroke-width="2.5" marker-end="url(#arrow-amber)"/>
+<path d="M 1052 520 L 1114 495" stroke="#9ece6a" stroke-width="2.5" marker-end="url(#arrow-green)"/>
+<path d="M 1052 615 L 1114 685" stroke="#7aa2f7" stroke-width="2.5" marker-end="url(#arrow-blue)"/>
+<g>
+  <rect x="24" y="846" width="1552" height="102" rx="10" fill="#1f2335" stroke="#414868" stroke-width="1.5" filter="url(#shadow)"/>
+  <rect x="24" y="846" width="1552" height="36" rx="10" fill="#16161e" stroke="#e0af68" stroke-width="1.2"/>
+  <rect x="24" y="846" width="8" height="36" rx="4" fill="#e0af68"/>
+  <text x="42" y="869" font-family="'Avenir Next', 'Helvetica Neue', -apple-system, BlinkMacSystemFont, sans-serif" font-size="13.5" font-weight="700" fill="#e0af68" letter-spacing="0.4">PROVENANCE &amp; VERSION CONTROL LOOP: MAGIT + CHANNELS-LOCK.SCM + SELF-REFERENTIAL SYSTEM</text>
+  <rect x="1450.5" y="852" width="115.5" height="24" rx="5" fill="#24283b" stroke="#e0af68" stroke-width="1"/>
+  <text x="1508.2" y="868" text-anchor="middle" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="10.5" font-weight="700" fill="#ffffff">C-x g · MAGIT</text>
+</g>
+<text x="48" y="904" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="12" fill="#ffffff"><tspan fill="#bb9af7">1. Edit system.org</tspan>   →   <tspan fill="#7dcfff">2. Test in Geiser (C-c C-c)</tspan>   →   <tspan fill="#9ece6a">3. Auto-Tangle on Save (C-c C-v t)</tspan>   →   <tspan fill="#e0af68">4. Pin (guix describe -f channels &gt; channels-lock.scm)</tspan>   →   <tspan fill="#7aa2f7">5. Commit in Magit (C-x g)</tspan></text>
+<text x="48" y="930" font-family="'Avenir Next', 'Helvetica Neue', -apple-system, BlinkMacSystemFont, sans-serif" font-size="12" fill="#a9b1d6">Result: Any workstation, VM, or server can clone your repo and run <tspan font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" fill="#7dcfff">guix time-machine -C channels-lock.scm -- system reconfigure config.scm</tspan> for an identical system!</text>
+
+  <!-- Footer -->
+  <text x="32" y="980" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="11" fill="#565f89">05-emacs-geiser-org-literate-loop · Literate Org-Mode + Emacs + Geiser REPL + Guix Generations</text>
+  <text x="1568" y="980" text-anchor="end" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="11" fill="#565f89">TOKYO NIGHT TECHNICAL BLUEPRINT · GNU GUILE / GUIX ARCHITECTURE</text>
+</svg>

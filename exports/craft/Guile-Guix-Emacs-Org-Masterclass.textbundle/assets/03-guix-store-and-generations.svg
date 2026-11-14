@@ -1,0 +1,238 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1020" width="1600" height="1020">
+  <defs>
+    <!-- Blueprint subtle grid -->
+    <pattern id="smallGrid" width="20" height="20" patternUnits="userSpaceOnUse">
+      <path d="M 20 0 L 0 0 0 20" fill="none" stroke="#232738" stroke-width="0.6" stroke-opacity="0.55"/>
+    </pattern>
+    <pattern id="largeGrid" width="100" height="100" patternUnits="userSpaceOnUse">
+      <rect width="100" height="100" fill="url(#smallGrid)"/>
+      <path d="M 100 0 L 0 0 0 100" fill="none" stroke="#2f3549" stroke-width="1" stroke-opacity="0.65"/>
+    </pattern>
+
+    <!-- Soft drop shadow -->
+    <filter id="shadow" x="-6%" y="-6%" width="112%" height="116%">
+      <feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#0a0b10" flood-opacity="0.65"/>
+    </filter>
+    <filter id="shadowSm" x="-6%" y="-6%" width="112%" height="116%">
+      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0a0b10" flood-opacity="0.5"/>
+    </filter>
+
+    <!-- Header gradient -->
+    <linearGradient id="headerGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#1f2335"/>
+      <stop offset="50%" stop-color="#24283b"/>
+      <stop offset="100%" stop-color="#1f2335"/>
+    </linearGradient>
+
+    <!-- Arrow markers for each accent color -->
+    <marker id="arrow-blue" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 1.5 L 9 5 L 0 8.5 z" fill="#7aa2f7"/>
+    </marker>
+    <marker id="arrow-cyan" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 1.5 L 9 5 L 0 8.5 z" fill="#7dcfff"/>
+    </marker>
+    <marker id="arrow-green" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 1.5 L 9 5 L 0 8.5 z" fill="#9ece6a"/>
+    </marker>
+    <marker id="arrow-magenta" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 1.5 L 9 5 L 0 8.5 z" fill="#bb9af7"/>
+    </marker>
+    <marker id="arrow-amber" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 1.5 L 9 5 L 0 8.5 z" fill="#e0af68"/>
+    </marker>
+    <marker id="arrow-orange" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 1.5 L 9 5 L 0 8.5 z" fill="#ff9e64"/>
+    </marker>
+    <marker id="arrow-red" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 1.5 L 9 5 L 0 8.5 z" fill="#f7768e"/>
+    </marker>
+    <marker id="arrow-fg" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 1.5 L 9 5 L 0 8.5 z" fill="#a9b1d6"/>
+    </marker>
+  </defs>
+
+  <!-- Canvas Background -->
+  <rect width="1600" height="1020" fill="#1a1b26"/>
+  <rect width="1600" height="1020" fill="url(#largeGrid)"/>
+
+  <!-- Outer Frame -->
+  <rect x="12" y="12" width="1576" height="996" rx="12" fill="none" stroke="#414868" stroke-width="1.5"/>
+
+  <!-- Top Title Banner -->
+  <rect x="24" y="22" width="1552" height="74" rx="10" fill="url(#headerGrad)" stroke="#414868" stroke-width="1.5" filter="url(#shadowSm)"/>
+  <rect x="24" y="22" width="8" height="74" rx="4" fill="#7aa2f7"/>
+  <text x="48" y="53" font-family="'Avenir Next', 'Helvetica Neue', -apple-system, BlinkMacSystemFont, sans-serif" font-size="22" font-weight="800" fill="#ffffff" letter-spacing="0.8">LINUX &amp; GNU GUIX SYSTEM ARCHITECTURE: FROM POWER-ON TO SHEPHERD PID 1</text>
+  <text x="48" y="79" font-family="'Avenir Next', 'Helvetica Neue', -apple-system, BlinkMacSystemFont, sans-serif" font-size="13.5" font-weight="500" fill="#7dcfff" letter-spacing="0.3">Hardware Boot Chain, Guile Early User Space (initrd), Immutable /gnu/store Root, and Shepherd Service DAG</text>
+
+  <!-- Top-Right Tag Pill -->
+  <rect x="1270" y="36" width="290" height="30" rx="6" fill="#16161e" stroke="#414868" stroke-width="1"/>
+  <text x="1415" y="56" text-anchor="middle" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="11.5" font-weight="700" fill="#bb9af7">DIAGRAM 03 · BOOT &amp; SHEPHERD PID 1</text>
+
+<g>
+  <rect x="24" y="112" width="356" height="252" rx="10" fill="#1f2335" stroke="#414868" stroke-width="1.5" filter="url(#shadow)"/>
+  <rect x="24" y="112" width="356" height="36" rx="10" fill="#16161e" stroke="#f7768e" stroke-width="1.2"/>
+  <rect x="24" y="112" width="8" height="36" rx="4" fill="#f7768e"/>
+  <text x="42" y="135" font-family="'Avenir Next', 'Helvetica Neue', -apple-system, BlinkMacSystemFont, sans-serif" font-size="13.5" font-weight="700" fill="#f7768e" letter-spacing="0.4">1. UEFI / BIOS FIRMWARE</text>
+  <rect x="292.0" y="118" width="78.0" height="24" rx="5" fill="#24283b" stroke="#f7768e" stroke-width="1"/>
+  <text x="331.0" y="134" text-anchor="middle" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="10.5" font-weight="700" fill="#ffffff">POWER-ON</text>
+</g>
+<rect x="38" y="166" width="328" height="42" rx="6" fill="#16161e" stroke="#2f3549" stroke-width="1"/>
+<text x="48" y="183" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="11.5" font-weight="700" fill="#f7768e">Hardware POST &amp; CPU Init</text>
+<text x="48" y="200" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="10.5" fill="#a9b1d6">Initializes RAM, PCIe, NVMe</text>
+<rect x="38" y="213" width="328" height="42" rx="6" fill="#16161e" stroke="#2f3549" stroke-width="1"/>
+<text x="48" y="230" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="11.5" font-weight="700" fill="#f7768e">Reads GPT EFI Partition</text>
+<text x="48" y="247" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="10.5" fill="#a9b1d6">/boot/efi/EFI/Guix/grubx64.efi</text>
+<rect x="38" y="260" width="328" height="42" rx="6" fill="#16161e" stroke="#2f3549" stroke-width="1"/>
+<text x="48" y="277" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="11.5" font-weight="700" fill="#f7768e">Hands control to Bootloader</text>
+<text x="48" y="294" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="10.5" fill="#a9b1d6">UEFI Boot Variable → Guix</text>
+<g>
+  <rect x="402" y="112" width="376" height="252" rx="10" fill="#1f2335" stroke="#414868" stroke-width="1.5" filter="url(#shadow)"/>
+  <rect x="402" y="112" width="376" height="36" rx="10" fill="#16161e" stroke="#e0af68" stroke-width="1.2"/>
+  <rect x="402" y="112" width="8" height="36" rx="4" fill="#e0af68"/>
+  <text x="420" y="135" font-family="'Avenir Next', 'Helvetica Neue', -apple-system, BlinkMacSystemFont, sans-serif" font-size="13.5" font-weight="700" fill="#e0af68" letter-spacing="0.4">2. GNU GRUB &amp; GENERATIONS</text>
+  <rect x="690.0" y="118" width="78.0" height="24" rx="5" fill="#24283b" stroke="#e0af68" stroke-width="1"/>
+  <text x="729.0" y="134" text-anchor="middle" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="10.5" font-weight="700" fill="#ffffff">ROLLBACK</text>
+</g>
+<rect x="416" y="166" width="348" height="42" rx="6" fill="#16161e" stroke="#2f3549" stroke-width="1"/>
+<text x="426" y="183" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="11.5" font-weight="700" fill="#e0af68">Config: /gnu/store/...-grub.cfg</text>
+<text x="426" y="200" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="10.5" fill="#a9b1d6">Generated declaratively from OS</text>
+<rect x="416" y="213" width="348" height="42" rx="6" fill="#16161e" stroke="#2f3549" stroke-width="1"/>
+<text x="426" y="230" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="11.5" font-weight="700" fill="#e0af68">Menu of All System Generations:</text>
+<text x="426" y="247" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="10.5" fill="#a9b1d6">system-41-link, system-42-link...</text>
+<rect x="416" y="260" width="348" height="42" rx="6" fill="#16161e" stroke="#2f3549" stroke-width="1"/>
+<text x="426" y="277" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="11.5" font-weight="700" fill="#e0af68">Kernel Cmdline Parameters:</text>
+<text x="426" y="294" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="10.5" fill="#a9b1d6">gnu.system=/gnu/store/...-system</text>
+<rect x="416" y="307" width="348" height="42" rx="6" fill="#16161e" stroke="#2f3549" stroke-width="1"/>
+<text x="426" y="324" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="11.5" font-weight="700" fill="#e0af68">Boot Script Pointer:</text>
+<text x="426" y="341" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="10.5" fill="#a9b1d6">gnu.load=/gnu/store/...-system/boot</text>
+<g>
+  <rect x="800" y="112" width="382" height="252" rx="10" fill="#1f2335" stroke="#414868" stroke-width="1.5" filter="url(#shadow)"/>
+  <rect x="800" y="112" width="382" height="36" rx="10" fill="#16161e" stroke="#7dcfff" stroke-width="1.2"/>
+  <rect x="800" y="112" width="8" height="36" rx="4" fill="#7dcfff"/>
+  <text x="818" y="135" font-family="'Avenir Next', 'Helvetica Neue', -apple-system, BlinkMacSystemFont, sans-serif" font-size="13.5" font-weight="700" fill="#7dcfff" letter-spacing="0.4">3. KERNEL + GUILE INITRD</text>
+  <rect x="1086.5" y="118" width="85.5" height="24" rx="5" fill="#24283b" stroke="#7dcfff" stroke-width="1"/>
+  <text x="1129.2" y="134" text-anchor="middle" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="10.5" font-weight="700" fill="#ffffff">INITRAMFS</text>
+</g>
+<rect x="814" y="166" width="354" height="42" rx="6" fill="#16161e" stroke="#2f3549" stroke-width="1"/>
+<text x="824" y="183" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="11.5" font-weight="700" fill="#7dcfff">Linux-Libre / Linux bzImage</text>
+<text x="824" y="200" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="10.5" fill="#a9b1d6">Mounts RAM rootfs (initramfs)</text>
+<rect x="814" y="213" width="354" height="42" rx="6" fill="#16161e" stroke="#2f3549" stroke-width="1"/>
+<text x="824" y="230" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="11.5" font-weight="700" fill="#7dcfff">combined-initrd (cpio.gz):</text>
+<text x="824" y="247" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="10.5" fill="#a9b1d6">1. CPU Microcode (Intel/AMD)</text>
+<rect x="814" y="260" width="354" height="42" rx="6" fill="#16161e" stroke="#2f3549" stroke-width="1"/>
+<text x="824" y="277" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="11.5" font-weight="700" fill="#7dcfff">2. Guile Scheme /init PID 1!</text>
+<text x="824" y="294" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="10.5" fill="#a9b1d6">Loads NVMe/Btrfs/LUKS modules</text>
+<rect x="814" y="307" width="354" height="42" rx="6" fill="#16161e" stroke="#2f3549" stroke-width="1"/>
+<text x="824" y="324" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="11.5" font-weight="700" fill="#7dcfff">Unlocks mapped-devices (LUKS)</text>
+<text x="824" y="341" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="10.5" fill="#a9b1d6">Mounts real / &amp; R/O /gnu/store</text>
+<g>
+  <rect x="1204" y="112" width="372" height="252" rx="10" fill="#1f2335" stroke="#414868" stroke-width="1.5" filter="url(#shadow)"/>
+  <rect x="1204" y="112" width="372" height="36" rx="10" fill="#16161e" stroke="#bb9af7" stroke-width="1.2"/>
+  <rect x="1204" y="112" width="8" height="36" rx="4" fill="#bb9af7"/>
+  <text x="1222" y="135" font-family="'Avenir Next', 'Helvetica Neue', -apple-system, BlinkMacSystemFont, sans-serif" font-size="13.5" font-weight="700" fill="#bb9af7" letter-spacing="0.4">4. SYSTEM ACTIVATION</text>
+  <rect x="1473.0" y="118" width="93.0" height="24" rx="5" fill="#24283b" stroke="#bb9af7" stroke-width="1"/>
+  <text x="1519.5" y="134" text-anchor="middle" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="10.5" font-weight="700" fill="#ffffff">EXEC PID 1</text>
+</g>
+<rect x="1218" y="166" width="344" height="42" rx="6" fill="#16161e" stroke="#2f3549" stroke-width="1"/>
+<text x="1228" y="183" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="11.5" font-weight="700" fill="#bb9af7">switch-root to real /</text>
+<text x="1228" y="200" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="10.5" fill="#a9b1d6">Pivots from RAM initrd to disk</text>
+<rect x="1218" y="213" width="344" height="42" rx="6" fill="#16161e" stroke="#2f3549" stroke-width="1"/>
+<text x="1228" y="230" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="11.5" font-weight="700" fill="#bb9af7">Runs gnu.load (/...-system/boot)</text>
+<text x="1228" y="247" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="10.5" fill="#a9b1d6">Pure Guile activation G-Exp!</text>
+<rect x="1218" y="260" width="344" height="42" rx="6" fill="#16161e" stroke="#2f3549" stroke-width="1"/>
+<text x="1228" y="277" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="11.5" font-weight="700" fill="#bb9af7">Populates /etc &amp; /run symlinks</text>
+<text x="1228" y="294" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="10.5" fill="#a9b1d6">Creates accounts, groups, setuid</text>
+<rect x="1218" y="307" width="344" height="42" rx="6" fill="#16161e" stroke="#2f3549" stroke-width="1"/>
+<text x="1228" y="324" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="11.5" font-weight="700" fill="#bb9af7">execs GNU Shepherd as PID 1</text>
+<text x="1228" y="341" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="10.5" fill="#a9b1d6">Hands over control to service manager</text>
+<path d="M 380 238 L 400 238" stroke="#e0af68" stroke-width="3" marker-end="url(#arrow-amber)"/>
+<path d="M 778 238 L 798 238" stroke="#7dcfff" stroke-width="3" marker-end="url(#arrow-cyan)"/>
+<path d="M 1182 238 L 1202 238" stroke="#bb9af7" stroke-width="3" marker-end="url(#arrow-magenta)"/>
+<g>
+  <rect x="24" y="382" width="1020" height="594" rx="10" fill="#1f2335" stroke="#414868" stroke-width="1.5" filter="url(#shadow)"/>
+  <rect x="24" y="382" width="1020" height="36" rx="10" fill="#16161e" stroke="#9ece6a" stroke-width="1.2"/>
+  <rect x="24" y="382" width="8" height="36" rx="4" fill="#9ece6a"/>
+  <text x="42" y="405" font-family="'Avenir Next', 'Helvetica Neue', -apple-system, BlinkMacSystemFont, sans-serif" font-size="13.5" font-weight="700" fill="#9ece6a" letter-spacing="0.4">PHASE 5: GNU SHEPHERD (PID 1) — DECLARATIVE SERVICE DEPENDENCY GRAPH (DAG)</text>
+  <rect x="828.5" y="388" width="205.5" height="24" rx="5" fill="#24283b" stroke="#9ece6a" stroke-width="1"/>
+  <text x="931.2" y="404" text-anchor="middle" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="10.5" font-weight="700" fill="#ffffff">PID 1 · FIBERS EVENT LOOP</text>
+</g>
+<rect x="254" y="434" width="560" height="62" rx="9" fill="#16161e" stroke="#9ece6a" stroke-width="2.2" filter="url(#shadowSm)"/>
+<text x="534" y="459" text-anchor="middle" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="14.5" font-weight="700" fill="#9ece6a">GNU Shepherd PID 1 (root service)</text>
+<text x="534" y="481" text-anchor="middle" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="11" fill="#a9b1d6">Guile Fibers Async Loop · Control Socket: /var/run/shepherd/socket (herd)</text>
+<text x="44" y="524" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="10.5" font-weight="700" fill="#7dcfff">TIER 1: FILESYSTEMS &amp; HARDWARE</text>
+<g>  <rect x="44" y="536" width="300" height="54" rx="7" fill="#292e42" stroke="#7dcfff" stroke-width="1.6" filter="url(#shadowSm)"/>  <text x="56" y="557" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="12" font-weight="700" fill="#7dcfff">file-systems</text>  <text x="334" y="556" text-anchor="end" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="9.5" fill="#565f89">root + /boot/efi + /tmp</text>  <text x="56" y="577" font-family="'Avenir Next', 'Helvetica Neue', -apple-system, BlinkMacSystemFont, sans-serif" font-size="11" fill="#a9b1d6">Mounts all declared (file-system) entries</text></g>
+<g>  <rect x="384" y="536" width="300" height="54" rx="7" fill="#292e42" stroke="#7dcfff" stroke-width="1.6" filter="url(#shadowSm)"/>  <text x="396" y="557" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="12" font-weight="700" fill="#7dcfff">udev</text>  <text x="674" y="556" text-anchor="end" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="9.5" fill="#565f89">udev-service-type</text>  <text x="396" y="577" font-family="'Avenir Next', 'Helvetica Neue', -apple-system, BlinkMacSystemFont, sans-serif" font-size="11" fill="#a9b1d6">Populates /dev nodes &amp; loads kernel firmware</text></g>
+<g>  <rect x="724" y="536" width="300" height="54" rx="7" fill="#292e42" stroke="#7dcfff" stroke-width="1.6" filter="url(#shadowSm)"/>  <text x="736" y="557" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="12" font-weight="700" fill="#7dcfff">sysctl &amp; urandom</text>  <text x="1014" y="556" text-anchor="end" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="9.5" fill="#565f89">sysctl-service-type</text>  <text x="736" y="577" font-family="'Avenir Next', 'Helvetica Neue', -apple-system, BlinkMacSystemFont, sans-serif" font-size="11" fill="#a9b1d6">Applies kernel tunables &amp; entropy seed</text></g>
+<path d="M 410 496 L 280 534" stroke="#9ece6a" stroke-width="1.8" marker-end="url(#arrow-cyan)"/>
+<path d="M 534 496 L 534 534" stroke="#9ece6a" stroke-width="1.8" marker-end="url(#arrow-cyan)"/>
+<path d="M 658 496 L 874 534" stroke="#9ece6a" stroke-width="1.8" marker-end="url(#arrow-cyan)"/>
+<text x="44" y="630" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="10.5" font-weight="700" fill="#7aa2f7">TIER 2: DAEMON, IPC BUS &amp; NETWORK</text>
+<g>  <rect x="44" y="642" width="300" height="54" rx="7" fill="#292e42" stroke="#7aa2f7" stroke-width="1.6" filter="url(#shadowSm)"/>  <text x="56" y="663" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="12" font-weight="700" fill="#7aa2f7">guix-daemon</text>  <text x="334" y="662" text-anchor="end" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="9.5" fill="#565f89">guix-service-type</text>  <text x="56" y="683" font-family="'Avenir Next', 'Helvetica Neue', -apple-system, BlinkMacSystemFont, sans-serif" font-size="11" fill="#a9b1d6">Builds derivations, substitutes &amp; store GC</text></g>
+<g>  <rect x="384" y="642" width="300" height="54" rx="7" fill="#292e42" stroke="#7aa2f7" stroke-width="1.6" filter="url(#shadowSm)"/>  <text x="396" y="663" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="12" font-weight="700" fill="#7aa2f7">dbus-root &amp; elogind</text>  <text x="674" y="662" text-anchor="end" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="9.5" fill="#565f89">dbus + elogind</text>  <text x="396" y="683" font-family="'Avenir Next', 'Helvetica Neue', -apple-system, BlinkMacSystemFont, sans-serif" font-size="11" fill="#a9b1d6">System message bus, seats &amp; power management</text></g>
+<g>  <rect x="724" y="642" width="300" height="54" rx="7" fill="#292e42" stroke="#7aa2f7" stroke-width="1.6" filter="url(#shadowSm)"/>  <text x="736" y="663" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="12" font-weight="700" fill="#7aa2f7">networking</text>  <text x="1014" y="662" text-anchor="end" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="9.5" fill="#565f89">static / NetworkManager</text>  <text x="736" y="683" font-family="'Avenir Next', 'Helvetica Neue', -apple-system, BlinkMacSystemFont, sans-serif" font-size="11" fill="#a9b1d6">Brings up NICs, DHCP, DNS, Wi-Fi (wpa)</text></g>
+<path d="M 290 590 L 290 640" stroke="#7dcfff" stroke-width="1.8" marker-end="url(#arrow-blue)"/>
+<path d="M 534 590 L 534 640" stroke="#7dcfff" stroke-width="1.8" marker-end="url(#arrow-blue)"/>
+<path d="M 590 590 L 840 640" stroke="#7dcfff" stroke-width="1.8" marker-end="url(#arrow-blue)"/>
+<text x="44" y="736" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="10.5" font-weight="700" fill="#bb9af7">TIER 3: SESSIONS &amp; REMOTE ACCESS</text>
+<g>  <rect x="44" y="748" width="300" height="54" rx="7" fill="#292e42" stroke="#bb9af7" stroke-width="1.6" filter="url(#shadowSm)"/>  <text x="56" y="769" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="12" font-weight="700" fill="#bb9af7">user-processes</text>  <text x="334" y="768" text-anchor="end" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="9.5" fill="#565f89">sync barrier</text>  <text x="56" y="789" font-family="'Avenir Next', 'Helvetica Neue', -apple-system, BlinkMacSystemFont, sans-serif" font-size="11" fill="#a9b1d6">Waits for mounts/bus; stops user procs on halt</text></g>
+<g>  <rect x="384" y="748" width="300" height="54" rx="7" fill="#292e42" stroke="#bb9af7" stroke-width="1.6" filter="url(#shadowSm)"/>  <text x="396" y="769" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="12" font-weight="700" fill="#bb9af7">tty1..6 &amp; greetd</text>  <text x="674" y="768" text-anchor="end" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="9.5" fill="#565f89">mingetty / greetd</text>  <text x="396" y="789" font-family="'Avenir Next', 'Helvetica Neue', -apple-system, BlinkMacSystemFont, sans-serif" font-size="11" fill="#a9b1d6">Virtual console logins &amp; Wayland/X11 session</text></g>
+<g>  <rect x="724" y="748" width="300" height="54" rx="7" fill="#292e42" stroke="#bb9af7" stroke-width="1.6" filter="url(#shadowSm)"/>  <text x="736" y="769" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="12" font-weight="700" fill="#bb9af7">ssh-daemon &amp; ntp</text>  <text x="1014" y="768" text-anchor="end" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="9.5" fill="#565f89">openssh-service-type</text>  <text x="736" y="789" font-family="'Avenir Next', 'Helvetica Neue', -apple-system, BlinkMacSystemFont, sans-serif" font-size="11" fill="#a9b1d6">Authorized SSH keys, sshd_config &amp; clock sync</text></g>
+<path d="M 290 696 L 290 746" stroke="#7aa2f7" stroke-width="1.8" marker-end="url(#arrow-magenta)"/>
+<path d="M 480 696 L 315 746" stroke="#7aa2f7" stroke-width="1.6" marker-end="url(#arrow-magenta)"/>
+<path d="M 534 696 L 534 746" stroke="#7aa2f7" stroke-width="1.8" marker-end="url(#arrow-magenta)"/>
+<path d="M 874 696 L 874 746" stroke="#7aa2f7" stroke-width="1.8" marker-end="url(#arrow-magenta)"/>
+<path d="M 344 775 L 382 775" stroke="#bb9af7" stroke-width="1.8" marker-end="url(#arrow-magenta)"/>
+<path d="M 534 802 L 534 844" stroke="#bb9af7" stroke-width="2" marker-end="url(#arrow-amber)"/>
+<rect x="44" y="846" width="980" height="64" rx="8" fill="#16161e" stroke="#e0af68" stroke-width="1.6"/>
+<text x="64" y="871" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="13" font-weight="700" fill="#e0af68">TIER 4: USER-SPACE SHEPHERD (guix home · ~/.guix-home)</text>
+<text x="64" y="894" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="11.5" fill="#c0caf5">Unprivileged Shepherd daemon per user → manages <tspan fill="#7dcfff">emacs --fg-daemon</tspan>, <tspan fill="#9ece6a">pipewire</tspan>, <tspan fill="#bb9af7">gpg-agent</tspan>, <tspan fill="#7aa2f7">mcron</tspan>, and XDG dotfiles!</text>
+<rect x="44" y="922" width="980" height="38" rx="6" fill="#292e42" stroke="#414868" stroke-width="1"/>
+<text x="62" y="946" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="11.5" fill="#ffffff"><tspan fill="#9ece6a">$ sudo herd status</tspan>   │   <tspan fill="#7dcfff">$ sudo herd graph | dot -Tsvg</tspan>   │   <tspan fill="#e0af68">$ sudo herd restart ssh-daemon</tspan>   │   <tspan fill="#bb9af7">$ herd status</tspan> (user services)</text>
+<g>
+  <rect x="1064" y="382" width="512" height="594" rx="10" fill="#1f2335" stroke="#414868" stroke-width="1.5" filter="url(#shadow)"/>
+  <rect x="1064" y="382" width="512" height="36" rx="10" fill="#16161e" stroke="#e0af68" stroke-width="1.2"/>
+  <rect x="1064" y="382" width="8" height="36" rx="4" fill="#e0af68"/>
+  <text x="1082" y="405" font-family="'Avenir Next', 'Helvetica Neue', -apple-system, BlinkMacSystemFont, sans-serif" font-size="13.5" font-weight="700" fill="#e0af68" letter-spacing="0.4">ATOMIC SYSTEM GENERATION ANATOMY</text>
+  <rect x="1473.0" y="388" width="93.0" height="24" rx="5" fill="#24283b" stroke="#e0af68" stroke-width="1"/>
+  <text x="1519.5" y="404" text-anchor="middle" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="10.5" font-weight="700" fill="#ffffff">/gnu/store</text>
+</g>
+<text x="1084" y="442" font-family="'Avenir Next', 'Helvetica Neue', -apple-system, BlinkMacSystemFont, sans-serif" font-size="13" font-weight="700" fill="#ffffff">Symlink Chain for Atomic Upgrades &amp; Rollbacks:</text>
+<rect x="1084" y="456" width="472" height="44" rx="6" fill="#16161e" stroke="#7dcfff" stroke-width="1.4"/>
+<text x="1100" y="475" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="12" font-weight="700" fill="#7dcfff">/run/current-system</text>
+<text x="1100" y="492" font-family="'Avenir Next', 'Helvetica Neue', -apple-system, BlinkMacSystemFont, sans-serif" font-size="11" fill="#a9b1d6">Active booted system pointer</text>
+<path d="M 1320 500 L 1320 514" stroke="#7dcfff" stroke-width="2" marker-end="url(#arrow-fg)"/>
+<rect x="1084" y="516" width="472" height="44" rx="6" fill="#16161e" stroke="#7aa2f7" stroke-width="1.4"/>
+<text x="1100" y="535" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="12" font-weight="700" fill="#7aa2f7">/var/guix/profiles/system</text>
+<text x="1100" y="552" font-family="'Avenir Next', 'Helvetica Neue', -apple-system, BlinkMacSystemFont, sans-serif" font-size="11" fill="#a9b1d6">Default boot profile symlink</text>
+<path d="M 1320 560 L 1320 574" stroke="#7aa2f7" stroke-width="2" marker-end="url(#arrow-fg)"/>
+<rect x="1084" y="576" width="472" height="44" rx="6" fill="#16161e" stroke="#e0af68" stroke-width="1.4"/>
+<text x="1100" y="595" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="12" font-weight="700" fill="#e0af68">/var/guix/profiles/system-42-link</text>
+<text x="1100" y="612" font-family="'Avenir Next', 'Helvetica Neue', -apple-system, BlinkMacSystemFont, sans-serif" font-size="11" fill="#a9b1d6">Generation 42 (switchable in milliseconds)</text>
+<path d="M 1320 620 L 1320 634" stroke="#e0af68" stroke-width="2" marker-end="url(#arrow-fg)"/>
+<rect x="1084" y="636" width="472" height="44" rx="6" fill="#16161e" stroke="#9ece6a" stroke-width="1.4"/>
+<text x="1100" y="655" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="12" font-weight="700" fill="#9ece6a">/gnu/store/h7k2...-system/</text>
+<text x="1100" y="672" font-family="'Avenir Next', 'Helvetica Neue', -apple-system, BlinkMacSystemFont, sans-serif" font-size="11" fill="#a9b1d6">Immutable Content-Addressed Closure</text>
+<rect x="1084" y="698" width="472" height="262" rx="8" fill="#16161e" stroke="#9ece6a" stroke-width="1.5"/>
+<text x="1102" y="724" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="12.5" font-weight="700" fill="#9ece6a">Inside /gnu/store/h7k2...-system/ :</text>
+<text x="1102" y="750" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="11.5" font-weight="700" fill="#7dcfff">├── kernel</text>
+<text x="1256" y="750" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="10.8" fill="#a9b1d6">→ /gnu/store/...-linux-libre-6.12/bzImage</text>
+<text x="1102" y="775" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="11.5" font-weight="700" fill="#7dcfff">├── initrd</text>
+<text x="1256" y="775" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="10.8" fill="#a9b1d6">→ /gnu/store/...-combined-initrd.cpio.gz</text>
+<text x="1102" y="800" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="11.5" font-weight="700" fill="#bb9af7">├── boot</text>
+<text x="1256" y="800" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="10.8" fill="#a9b1d6">→ /gnu/store/...-boot (Phase 4 Guile script)</text>
+<text x="1102" y="825" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="11.5" font-weight="700" fill="#9ece6a">├── shepherd.conf</text>
+<text x="1256" y="825" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="10.8" fill="#a9b1d6">→ /gnu/store/...-shepherd.conf (PID 1 DAG)</text>
+<text x="1102" y="850" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="11.5" font-weight="700" fill="#e0af68">├── etc/</text>
+<text x="1256" y="850" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="10.8" fill="#a9b1d6">→ /gnu/store/...-etc/ (Immutable /etc files)</text>
+<text x="1102" y="875" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="11.5" font-weight="700" fill="#7aa2f7">├── profile/</text>
+<text x="1256" y="875" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="10.8" fill="#a9b1d6">→ /gnu/store/...-profile/ (System $PATH)</text>
+<text x="1102" y="900" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="11.5" font-weight="700" fill="#ff9e64">├── provenance</text>
+<text x="1256" y="900" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="10.8" fill="#a9b1d6">→ Channel commit hashes (guix describe)</text>
+<text x="1102" y="925" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="11.5" font-weight="700" fill="#f7768e">└── configuration.scm</text>
+<text x="1256" y="925" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="10.8" fill="#a9b1d6">→ Self-archiving OS config source!</text>
+
+  <!-- Footer -->
+  <text x="32" y="1000" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="11" fill="#565f89">03-linux-guix-boot-and-shepherd · UEFI → GRUB Generations → Guile Initrd → Shepherd PID 1 Service DAG</text>
+  <text x="1568" y="1000" text-anchor="end" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="11" fill="#565f89">TOKYO NIGHT TECHNICAL BLUEPRINT · GNU GUILE / GUIX ARCHITECTURE</text>
+</svg>

@@ -1,0 +1,404 @@
+oracle-image.scm -- purpose and justification of each section
+=============================================================
+
+Verified against Guix 17c2142271bb4857cc0e517ac42af50b4a55aef6 (2026-07-31).
+Where this file cites a Guix source location, that location was read, not
+recalled; re-check it after a `guix pull`.
+
+
+WHY THIS PLATFORM DOES NOT LOOK LIKE THE OTHERS
+-----------------------------------------------
+
+Every other platform in this repository (cloudzy, framework, framework-dual)
+follows: boot the Guix live ISO -> partition -> mount -> write config.scm ->
+`guix system init`.  Oracle cannot do this.  OCI does not support importing or
+booting an ISO at all; it accepts only QCOW2/VMDK custom images uploaded to
+Object Storage, or in-place manipulation of a running instance's boot volume.
+
+So the Oracle flow inverts: the image is built on the developer's machine with
+`guix system image`, uploaded, imported as a custom image, and launched.  There
+are no numbered install steps, no State struct, and no Go code -- the entire
+"installer" is this one declarative file.
+
+Consequence worth stating plainly: nothing in this file can be fixed by
+re-running an installer.  A mistake here produces an instance that must be
+debugged over the OCI serial console or thrown away.  That is why the serial
+console configuration below is not optional polish.
+
+
+MODULE IMPORTS
+--------------
+
+(gnu)                 operating-system, file-system, user-account, etc.
+(guix gexp)           #~ and file-append, used by the swap file service.
+                      Imported explicitly rather than relying on (gnu) to
+                      re-export it, so the file does not break if that
+                      re-export changes.
+
+use-service-modules networking shepherd ssh
+                      networking -> dhcpcd-service-type
+                      shepherd   -> shepherd-service, shepherd-root-service-type
+                      ssh        -> openssh-service-type
+
+use-package-modules base linux ssh
+                      base  -> coreutils (dd)
+                      linux -> util-linux (mkswap, swapon, swapoff)
+                      ssh   -> openssh-sans-x
+
+
+SITE-SPECIFIC SETTINGS
+----------------------
+
+%user-name / %full-name
+    "guix" matches the default in cloudzy/install/03-config.go, so the two
+    free-software platforms present the same account name.  Deliberately NOT
+    "opc": that is Oracle Linux's cloud-init user and carries no meaning on a
+    Guix image.
+
+%host-name
+    Cosmetic.  OCI also sets a hostname over DHCP; this is the fallback.
+
+%timezone
+    Matches the cloudzy default.  UTC would arguably be more correct for a
+    server, but consistency across platforms in this repo was preferred; the
+    user changes it in one place if they disagree.
+
+%authorized-key
+    local-file resolves relative to this .scm file, so the key is picked up
+    from oracle/image/authorized-key.pub at build time.
+
+    This is the single most dangerous value in the file.  Guix has no
+    cloud-init: there is no mechanism to inject an SSH key when the instance
+    launches, the way every other distribution's cloud image does.  The key is
+    compiled into the image.  If it is wrong, SSH is unreachable, and because
+    password authentication is disabled the only way back in is the OCI serial
+    console.
+
+    Although you might be tempted to also enable password authentication "just
+    as a backup", we do not: an internet-facing sshd with password auth is
+    exactly the thing that gets a free-tier instance compromised and the
+    account suspended.  The serial console is the backup.
+
+%swapfile-size-mib
+    2048.  VM.Standard.E2.1.Micro has 1 GiB of RAM.  A headless Guix system
+    idles fine in 1 GiB, but `guix pull` and `guix system reconfigure` are
+    memory-hungry and get OOM-killed without swap.  2 GiB is a compromise
+    between "enough to reconfigure" and "not wasting boot volume".
+
+
+%swapfile-service
+---------------
+
+Why a shepherd service rather than the operating-system 'swap-devices' field:
+'swap-devices' expects the swap area to already exist.  Nothing in a freshly
+built image has created one, so declaring it there yields a boot-time failure
+to enable a file that is not there.
+
+The service is one-shot? #t and guards on (file-exists? ...), which makes it
+idempotent: it creates the file on first boot and merely re-enables it on
+every subsequent boot.
+
+requirement '(file-systems) -- the root file system must be mounted before
+there is anywhere to put /swapfile.
+
+dd, not fallocate.  fallocate on ext4 produces unwritten extents, and swapon
+refuses a swap file containing them ("swapon: /swapfile: skipping - it appears
+to have holes").  dd writes real zeroes.  This costs a few seconds of first
+boot and is the reason the size is 2 GiB rather than something larger.
+
+chmod #o600 before mkswap: swapon warns loudly about insecure permissions
+otherwise.
+
+`run` is defined locally as (zero? (apply system* args)) rather than using
+`invoke` from (guix build utils).  Shepherd services execute inside the
+shepherd's own Guile, where (guix build utils) is not guaranteed to be
+imported; system* always is.
+
+The stop procedure returns #f, which is the shepherd convention for "this
+service is now stopped".
+
+
+OPERATING-SYSTEM FIELDS
+-----------------------
+
+kernel linux-libre
+    Free software only, matching the cloudzy platform's constraint.  This
+    costs nothing here: OCI paravirtualized instances present virtio devices,
+    and virtio requires no redistributable firmware blobs.  Contrast with
+    framework/framework-dual, which need nonguix for WiFi firmware.
+
+initrd-modules -- deliberately ABSENT
+    %base-initrd-modules already contains virtio_pci, virtio_balloon,
+    virtio_blk, virtio_net, virtio_console, virtio-rng, virtio_mmio and
+    virtio_scsi (gnu/system/linux-initrd.scm, default-initrd-modules).  That
+    is everything a paravirtualized OCI instance needs to find its root disk
+    and its VNIC.
+
+    Although you might be tempted to add an initrd-modules field listing the
+    virtio modules explicitly "to be safe", do not.  See
+    docs/NVME_MODULE_FIX.md for the framework case where naming a module that
+    the kernel has built in caused `guix system build` to fail outright.  The
+    same failure mode applies here.
+
+kernel-arguments
+    console=tty0 keeps output on the emulated VGA console.
+    console=ttyS0,115200n8 is what the OCI serial console attaches to.
+
+    Order matters: Linux sends /dev/console to the LAST console= listed, so
+    ttyS0 last means kernel panics land in the OCI console where they can
+    actually be read.
+
+    Second, non-obvious effect: %base-services runs agetty with (tty #f),
+    meaning "auto-detect", and that auto-detection reads the console= argument
+    from the kernel command line (gnu/services/base.scm, %base-services).  So
+    adding ttyS0 here is also what produces a login prompt on the serial line.
+    No explicit agetty service is needed.
+
+    %default-kernel-arguments is appended rather than replaced so the Guix
+    defaults are preserved.
+
+bootloader
+    grub-bootloader (BIOS), not grub-efi-bootloader.  This must agree with two
+    other choices:
+
+      image type 'qcow2'      -> mbr-hybrid-disk-image, MBR + hybrid ESP
+      OCI launch mode         -> PARAVIRTUALIZED (BIOS boot + virtio devices)
+
+    The UEFI alternative is image type 'qcow2-gpt' (efi-disk-image, GPT+ESP)
+    with launch mode NATIVE and grub-efi-bootloader.  Mixing the two -- e.g.
+    grub-bootloader with qcow2-gpt -- produces an image that builds fine and
+    then does not boot.
+
+    targets '("/dev/sda")
+    For an image build the bootloader is installed into the image file itself,
+    so this value is not what makes the build work.  It matters LATER: the
+    first `guix system reconfigure` run on the live instance will try to
+    install GRUB to this path.  RESOLVED 2026-08-08: this was originally
+    /dev/vda on the assumption of plain virtio-blk, but lsblk on the first
+    live instance showed the PARAVIRTUALIZED launch mode attaches the boot
+    volume via virtio-scsi, which enumerates as /dev/sda (sda1 40M BIOS
+    boot, sda2 root).  QEMU's default IDE also shows sda, so the smoke test
+    matches the cloud here.
+
+    terminal-outputs/inputs '(console serial_0), serial-unit 0,
+    serial-speed 115200
+    Mirrors the GRUB menu onto the serial line.  This is what lets a broken
+    system be recovered from the OCI console by selecting a previous
+    generation.  Valid symbols are console, serial_0..serial_3, gfxterm,
+    vga_text (gnu/bootloader/grub.scm).  Note 'serial_0', not 'serial'.
+
+    timeout 3 -- short enough not to waste boot time, long enough to catch the
+    menu over a laggy serial console.
+
+file-systems -- the "Guix_image" label
+    THIS STRING IS NOT ARBITRARY AND MUST NOT BE "PRETTIFIED".
+
+    `guix system image` writes the label "Guix_image" onto the root partition;
+    it is defined as root-label in gnu/system/image.scm:126.  The initrd finds
+    the root file system by that label.  Change it to something friendlier
+    like "GUIX_ROOT" -- which is what the other platforms in this repo use,
+    because they run mkfs themselves and choose their own label -- and the
+    image builds successfully and then drops to a Guile rescue REPL on boot,
+    because the initrd cannot find a partition with that label.
+
+users
+    No (password ...) field.  A user-account without one gets a locked
+    password, which blocks password login while leaving SSH key login working.
+    That is the intent, not an oversight.
+
+    supplementary-groups '("wheel" "netdev") -- wheel for sudo, netdev to
+    manage network interfaces.
+
+sudoers-file
+    %wheel ALL=NOPASSWD:ALL
+
+    This is a consequence of the locked password above, not a convenience: the
+    account has no password, so a password-prompting sudo could never succeed
+    and the user could never become root on their own machine.  Other
+    distributions' cloud images reach the same place via cloud-init, which
+    writes an equivalent NOPASSWD rule for the default user.
+
+    The security trade is real and worth stating: anyone who obtains the SSH
+    private key gets root.  Given the key is the only way in at all, this does
+    not widen the attack surface much.
+
+packages %base-packages
+    Minimal by design, consistent with the rest of the repo -- customize after
+    first boot.  Worth knowing: nss-certs is already included via
+    %base-packages-networking (gnu/system.scm:984), so `guix pull` has working
+    TLS immediately.  It does not need to be added.
+
+services
+    dhcpcd-service-type, not dhcp-client-service-type.  The latter is
+    deprecated in Guix 17c2142 and emits a warning on every evaluation.
+
+    openssh-service-type with openssh-sans-x: the plain openssh package pulls
+    in X11 for X forwarding, which is dead weight in a headless server image.
+
+    %base-services is appended, which brings the agetty discussed above,
+    syslogd, and the rest of the standard set.
+
+
+IMAGE SIZE: WHY 50G, AND WHAT IT REPLACES
+-----------------------------------------
+
+Build with --image-size=50G.
+
+The obvious alternative is to build a small image (say 5G) and grow the root
+partition on first boot, which is what cloud-init's growpart does elsewhere.
+That would require writing a first-boot service that detects the boot device,
+grows the last partition, and runs resize2fs -- code that cannot be tested
+without a live OCI instance and that fails in ways that leave the instance
+unbootable.
+
+Building at 50G instead makes the partition table already span the whole boot
+volume, and the growth service disappears entirely.  The upload cost is
+minimal because the qcow2 is compressed and sparse: unwritten space costs
+almost nothing on the wire.
+
+50G is chosen to match the OCI default boot volume size.  The boot volume must
+be at least as large as the image, and Always Free allows 200 GB of block
+storage total, so two 50G micro instances fit comfortably.
+
+
+STATUS
+------
+
+Fully validated 2026-08-08.  Everything below was observed, not reasoned:
+
+  - the image builds (once the host had disk headroom; see CHECKLIST.md for
+    the "database is locked" red herring)
+  - QEMU smoke test: serial login prompt in ~10s, root mounted by label,
+    sshd accepts the baked key, locked-password account completes pubkey
+    login under UsePAM, passwordless sudo works, 2G swapfile active
+  - PARAVIRTUALIZED launch mode accepted the BIOS/MBR qcow2 image
+  - live instance boots on OCI and sshd answers on the public IP
+  - boot volume appears as /dev/sda (virtio-scsi), settled by lsblk on the
+    live instance; 'targets' now records this (an sda1 40M BIOS-boot
+    partition plus sda2 root, exactly as in QEMU)
+
+
+%metadata-ssh-key-service  (added 2026-08-08)
+---------------------------------------------
+
+The one piece of cloud-init that matters, and the reason the note above about
+"there is no mechanism to inject an SSH key at launch" is now out of date.
+
+Why it exists: without it, a key can only be baked in, so a published image
+cannot serve anyone but its builder, so every user needs their own image build,
+so every user needs Guix installed.  That chain is what kept this platform from
+being usable by someone who has never used Guix.  See
+docs/ORACLE_ONE_CLICK_ROADMAP.md.
+
+Reads http://169.254.169.254/opc/v2/instance/metadata/ssh_authorized_keys and
+installs the result into ~guix/.ssh/authorized_keys at boot.
+
+Decisions that are load-bearing and non-obvious:
+
+  ~/.ssh/authorized_keys, NOT /etc/ssh/authorized_keys.d/
+    Guix's openssh-service-type DELETES AND RECREATES that directory at every
+    activation (gnu/services/ssh.scm: delete-file-recursively).  Anything the
+    service wrote there would vanish.  Both paths are consulted because Guix
+    emits
+      AuthorizedKeysFile .ssh/authorized_keys .ssh/authorized_keys2 \
+                         /etc/ssh/authorized_keys.d/%u
+    so the baked-in key and the metadata key coexist, and neither mechanism can
+    destroy the other.  Verified by reading the Guix source, not assumed.
+
+  IMDSv2 and the Bearer header
+    v2 REQUIRES "Authorization: Bearer Oracle".  v1 needs no header but is
+    disabled on instances created with v2-only enforcement, so it is tried only
+    as a fallback for older instances.
+
+  wget, not (web client)
+    Guile's (web http) validates known header names against typed values, and
+    'authorization' is one of them -- handing it a raw string is a trap.  wget
+    is in %base-packages already; file-append pins the exact store path rather
+    than trusting PATH inside a shepherd service.
+
+  Failure is conditional on whether metadata is required
+    A generic image has no baked fallback.  After bounded exhaustion its
+    one-shot returns #f so Shepherd and the serial console expose a real boot
+    defect instead of reporting success for an unreachable machine.  A
+    personal image with a baked key logs the exhausted metadata path but
+    returns #t because local QEMU has no metadata service and the baked login
+    remains valid.
+
+  Serial-visible, secret-free outcomes
+    Every retry and terminal result is written to stderr and /dev/console.
+    Logs include attempt counts, delay, installed key COUNT, and fixed modes,
+    never public-key bytes.  The 2026-08-25 live failure produced no useful
+    service line in console history; relying on Shepherd's stderr alone was
+    therefore insufficient for a machine nobody could SSH into.
+
+  Only installs plausible key lines
+    The endpoint returns an HTML error body in some failure modes.  Writing that
+    into authorized_keys would be a silent, baffling failure, so lines are
+    filtered to those beginning ssh- / ecdsa- / sk-ssh- / sk-ecdsa-.
+
+  Bounded retry (12 attempts, 3-second delay, wget timeout 2 / tries 1)
+    A Shepherd `networking` requirement means the network service started, not
+    necessarily that DHCP and the link-local metadata route are usable.  One
+    fetch can race that transition.  Twelve short attempts bound the worst
+    case while covering normal DHCP convergence.  The policy is tested with
+    injected fetch/wait/log procedures, so tests do not sleep or use a network.
+
+  Runtime helper stored separately
+    metadata-ssh-keys.scm contains parsing, retry policy, installation and
+    logging.  oracle-image.scm adds it with local-file and loads the immutable
+    store path in the boot gexp.  This makes delayed-success and exhaustion
+    testable under ordinary Guile instead of duplicating runtime logic in a
+    test.
+
+%authorized-key is now OPTIONAL
+    Absent oracle/image/authorized-key.pub, the image builds with no baked key
+    and relies entirely on metadata -- the generic, publishable case.  Present,
+    behaviour is exactly as before.  Both were verified to evaluate to an
+    <operating-system>.
+
+PARTIALLY VERIFIED ON A LIVE INSTANCE (2026-08-08)
+    Probed from the running guix-oracle instance:
+      - wget present at /run/current-system/profile/bin/wget       [OK]
+      - IMDSv2 WITH the Bearer header answers (returned {})        [OK]
+      - IMDSv2 WITHOUT the header fails                            [OK -- proves
+        the header is genuinely required, so sending it is correct]
+      - IMDSv1 also answers on this tenancy, so the fallback is live
+      - .../metadata/ssh_authorized_keys 404s, because that instance was
+        launched without --metadata.  This is exactly the path the service
+        treats as "no metadata available".
+
+    So the endpoint, the header and the tool are confirmed.  What remains
+    unconfirmed is the behaviour when keys ARE present.
+
+LEAF VALUE QUOTING -- measured RAW, guard kept anyway
+    Settled on the live instance 2026-08-08: /opc/v2/instance/shape returned
+
+        VM.Standard.E2.1.Micro
+
+    with NO surrounding quotes, so leaf values come back raw and the plain
+    (string-prefix? "ssh-" ...) filter would have worked.  unquote-value is
+    therefore a no-op on the observed format, and is kept as cheap insurance:
+    it strips nothing when there is nothing to strip, and the failure it
+    prevents is invisible if it ever does occur.
+
+    The failure it guards against, for the record: if a leaf key were returned
+    JSON-quoted ("ssh-ed25519 AAAA...") rather than raw, then a bare (string-prefix? "ssh-" ...) filter rejects every
+    every real key would be rejected and the service would log "no usable
+    public keys" while looking perfectly healthy -- an instance nobody can log
+    into, with a reassuring log.  The unquoted form is also what gets WRITTEN
+    (map, not just filter): accepting a quoted line and then writing it with
+    its quotes intact would produce an authorized_keys that sshd silently
+    ignores -- the same class of invisible failure, one step later.
+
+    Note the probe used 'shape' rather than 'ssh_authorized_keys': an instance
+    with no keys cannot demonstrate the keys endpoint itself, so the format is
+    inferred from a sibling leaf.  That is why the guard stays.
+
+FAILED LIVE ACCEPTANCE; RETRY FIX NOT YET LIVE-VERIFIED (2026-08-25)
+    Two metadata-only launches failed SSH.  The latest proved the OCI control
+    plane contained the exact intended public key, IMDSv2-only was enabled,
+    and the image reached its login prompt, but SSH returned Permission denied
+    (publickey).  Evidence is under .oracle-validation/evidence/ locally and
+    the diagnostic instance/boot volume were terminated.  Bounded retry and
+    serial-visible outcomes were added in OV-1 and pass offline tests; a new
+    image and OV-2 live probe are still required before claiming success.

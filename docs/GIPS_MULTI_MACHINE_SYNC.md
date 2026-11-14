@@ -1,0 +1,191 @@
+# GIPS Multi-Machine Binary Sync Guide
+
+Accelerate package installations and share build artifacts across your personal Guix devices (e.g., between two Oracle Cloud instances, or between a home Docker host and a remote VPS) using **GNU Guix IPFS Package Substitutes (GIPS)**.
+
+---
+
+## The Problem GIPS Solves
+
+Compiling large packages on a resource-constrained machine (like Oracle's 1-core Always Free micro instance) is slow and risks running out of memory.
+
+Traditional binary-sharing tools have friction:
+- `guix publish` requires fixed public IPs, VPNs (like Tailscale), or router port-forwarding.
+- `guix copy` is a manual SSH-based push.
+
+**With GIPS:**
+- Uses the global **IPFS libp2p swarm** for automatic NAT hole-punching and peer discovery across home firewalls and cloud data centers.
+- Runs a local substitute HTTP proxy (`http://127.0.0.1:8080`) that `guix-daemon` queries transparently.
+- When one of your machines publishes a package, your other machines -- once **subscribed** to it -- mirror that exact substitute binary over IPFS in the background and then serve it to `guix-daemon` locally, instead of compiling from source.
+
+---
+
+## Architecture Compatibility
+
+> [!IMPORTANT]
+> **Substitutes Only Match Identical CPU Architectures:**
+> GNU Guix store paths encode the system tuple (e.g. `x86_64-linux` vs `aarch64-linux`).
+> `guix-daemon` will refuse to install an `aarch64` binary on an `x86_64` system.
+> 
+> - **x86_64 Nodes**: Oracle `VM.Standard.E2.1.Micro` (Always Free AMD), Framework laptops, x86_64 PCs, and standard cloud VPSs.
+> - **aarch64 Nodes**: Apple Silicon Macs (M1/M2/M3/M4 native), Oracle `VM.Standard.A1.Flex` (Always Free Ampere), Raspberry Pi 3/4/5.
+
+### 💡 Deciding Your Architecture Strategy
+
+Because Guix packages must match architectures, decide based on what machines you own:
+
+1. **Option A: Standardize on `x86_64` (Best if you have ANY x86 laptops or PCs)**
+   - If you have an Intel/AMD laptop (like a Framework), x86 desktop, or x86 VPS, stick with **`x86_64` everywhere**.
+   - Your Apple Silicon Mac can fully participate as an `x86_64` builder and substitute cache by running your Guix container via Rosetta:
+     ```bash
+     docker run --platform linux/amd64 ...
+     ```
+   - All packages built on your Mac, laptops, and Oracle `VM.Standard.E2.1.Micro` instance will share identical bit-for-bit substitutes.
+
+2. **Option B: Standardize on `aarch64` (Best if you ONLY sync between your Apple Silicon Mac and Oracle)**
+   - If you don't care about x86 machines and want to sync **strictly between your Mac and Oracle**, you can launch an Always Free **Oracle Ampere A1 (`VM.Standard.A1.Flex`)** instance.
+   - Both your Mac and the Oracle instance will run native `aarch64` at maximum silicon speed with zero emulation.
+   - *Note: You cannot share these binaries with x86 machines.*
+
+---
+
+## Step-by-Step Setup
+
+### Step 1: Install GIPS Tooling on Both Machines
+
+> [!NOTE]
+> **IPFS Package Name in GNU Guix:**
+> In current GNU Guix, the IPFS (Kubo) package is named **`kubo`** (`gnu/packages/ipfs.scm`). Running `guix install ipfs` will fail with `unknown package`.
+
+To install all GIPS build, runtime, and cryptographic dependencies in one shot (`kubo`, `rust` with cargo, `pkg-config`, `openssl`, `sqlite`, `guile-gcrypt`, `just`, `curl`, `jq`), run on each machine:
+
+```bash
+# From repository root:
+make gips-bundle
+# Or directly via Guix:
+guix package -m gips/manifest.scm
+```
+
+---
+
+### Step 2: Initialize the Hub (Node 1 - Builder / Producer)
+
+On your primary build machine:
+
+```bash
+make gips-hub
+```
+
+This single command:
+1. Generates private/public narinfo signing keys (mode `0600`) and configures `~/.config/gips/gipsd.toml`.
+2. Starts `ipfs daemon` and `gipsd` in the background with logging to `~/.config/gips/`.
+3. Displays the Hub's public key with instructions for connecting any Spoke node.
+
+---
+
+### Step 3: Connect Spoke Nodes (Node 2, 3, etc. - Consumers)
+
+On each consumer machine:
+
+```bash
+make gips-spoke
+```
+
+When prompted:
+1. Paste the Hub's signing public key (from Step 2).
+2. The script automatically authorizes the key in Guix's `/etc/guix/acl` via `sudo guix archive --authorize`.
+3. Configures `gipsd.toml` for consumer mode and starts `ipfs daemon` and `gipsd` in the background.
+
+*(For automated scripts, you can also pass `make gips-spoke HUB_KEY='(public-key ...)'` or `make gips-spoke HUB_KEY_FILE=hub.pub` without interactive prompts).*
+
+---
+
+### Step 3b: The Subscription (done for you by `make gips-spoke`)
+
+Trusting a publisher and fetching from it are separate steps, and the second is
+the one that is easiest to forget (the upstream quickstart says the same). As
+of 2026-09-21 `make gips-spoke` finishes by running `make gips-subscribe`,
+which waits for `gipsd` and subscribes to `GNS_NAME` (default `cluster.gnu`,
+the same default `make gips-push` publishes under). If your Hub pushes under a
+different name, pass it on both sides:
+
+```bash
+make gips-spoke GNS_NAME=myfleet.gnu     # Spoke
+make gips-push  GNS_NAME=myfleet.gnu     # Hub
+
+make gips-subscribe GNS_NAME=other.gnu   # add another feed later
+```
+
+> [!WARNING]
+> Subscribing records the name; *resolving* it goes through GNS. As verified on
+> 2026-09-21, GIPS's GNS **publish** command does not match the real
+> `gnunet-gns` tool, so a Hub cannot yet announce its feed and a subscribed
+> Spoke has nothing to resolve. Tracked as G1.1b in `CHECKLIST.md`.
+
+How it then works, verified by reading `gips/components/gips-http/src/lib.rs`
+on 2026-09-20, not yet by a live two-node run:
+
+- The Spoke's `gipsd` answers `guix-daemon` only from its **local** database.
+  It does not fetch from the Hub on demand.
+- A background mirror worker wakes every 60 s, walks each subscribed feed, and
+  downloads **and pins** every new item before it becomes visible to Guix. So
+  there is a delay of up to a minute plus transfer time between `gips-push` on
+  the Hub and the package being installable on the Spoke.
+- The worker refuses more than 1000 pinned items per publisher.
+- Narinfos are signed by the Spoke's *own* `gipsd` key, so that key must also
+  be in the Spoke's `/etc/guix/acl`.
+
+---
+
+### Step 4: Share and Substitute Packages
+
+- **On Machine 1 (Producer)**:
+  Publish your current profile snapshot to IPFS:
+  ```bash
+  make gips-push GNS_NAME=cluster.gnu
+  ```
+
+- **On Machine 2 (Consumer)**:
+  Install packages using your local GIPS proxy:
+  ```bash
+  guix install <package> --substitute-urls="http://127.0.0.1:8080 https://ci.guix.gnu.org"
+  ```
+  Or pull an entire manifest:
+  ```bash
+  make gips-pull MANIFEST=sync-manifest.scm
+  ```
+
+> [!WARNING]
+> **The `https://ci.guix.gnu.org` fallback hides a broken GIPS setup.** With it
+> in the URL list, a Spoke that never subscribed (or has not mirrored yet) still
+> installs everything -- from the central server -- and nothing tells you GIPS
+> served none of it. To confirm GIPS is really serving, install one package
+> with `--substitute-urls="http://127.0.0.1:8080"` alone and check that it
+> succeeds.
+
+Whether this is faster than the central servers has **not been measured**. The
+plan for measuring it, and what may and may not be claimed from the result, is
+[GIPS_BENCHMARK_PROTOCOL.md](GIPS_BENCHMARK_PROTOCOL.md).
+
+---
+
+## Convenience Makefile Targets
+
+| Target | Description |
+|---|---|
+| `make gips-bundle` | Installs complete GIPS tooling bundle (`kubo`, `rust`, `guile-gcrypt`, etc.) via `gips/manifest.scm`. |
+| `make gips-hub` | Initializes this node as the Hub (builder): sets up keys, starts daemons, and outputs Spoke connection info. |
+| `make gips-spoke` | Connects this node as a Spoke (consumer): authorizes Hub key in `/etc/guix/acl`, starts daemons, and subscribes to `GNS_NAME`. |
+| `make gips-subscribe` | Subscribes this node's `gipsd` to the feed `GNS_NAME` (waits for the daemon; fails loudly). |
+| `make gips-setup` | Runs the post-install recipe: creates secure config dir, generates keys (`0600`/`0700`), and writes default config. |
+| `make gips-start` | Starts `ipfs daemon` and `gipsd` in the background with logging to `~/.config/gips/`. |
+| `make gips-stop` | Stops background `gipsd` and `ipfs daemon` processes cleanly. |
+| `make gips-status` | Inspects IPFS swarm connections, daemon health, metrics, and Guix ACL state. |
+| `make gips-push` | Exports active Guix profile to a manifest and creates a GIPS snapshot on IPFS. |
+| `make gips-pull` | Installs packages substituting from local GIPS proxy (`http://127.0.0.1:8080`). |
+| `make gips-daemon` | Starts the local GIPS daemon (`gipsd`) in the foreground. |
+| `make ipfs-docker` | Starts a persistent `ipfs/kubo` container (for non-Guix Docker hosts). |
+| `make gips-test` | Runs the offline Scheme API & signing test suite. |
+| `make gips-rust-test` | Runs all Rust workspace unit and integration tests. |
+| `make gips-check` | Runs both Scheme and Rust test suites verifying parity. |
+
+For deep technical details and protocol invariants, see [`gips/docs/personal-sync-quickstart.md`](../gips/docs/personal-sync-quickstart.md) and [`gips/docs/architecture.md`](../gips/docs/architecture.md).

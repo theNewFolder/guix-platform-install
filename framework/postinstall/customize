@@ -1,0 +1,130 @@
+#!/run/current-system/profile/bin/bash
+# Framework 13 Laptop Customization Tool
+# Optimized for Framework 13 single-boot (Guix only)
+
+set -euo pipefail
+
+CONFIG_FILE="/etc/config.scm"
+BACKUP_DIR="$HOME/.config/guix-customize/backups"
+
+# Source shared library functions
+# Resolve script path (handles symlinks)
+SCRIPT_PATH="${BASH_SOURCE[0]}"
+while [ -L "$SCRIPT_PATH" ]; do
+  SCRIPT_PATH="$(readlink "$SCRIPT_PATH")"
+  # If relative symlink, resolve relative to original dir
+  if [[ "$SCRIPT_PATH" != /* ]]; then
+    SCRIPT_PATH="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/$SCRIPT_PATH"
+  fi
+done
+SCRIPT_DIR="$(cd "$(dirname "$SCRIPT_PATH")" && pwd)"
+
+# Find postinstall/lib.sh relative to customize script location
+# Structure: ~/guix-customize/framework/postinstall/customize
+# We need: ~/guix-customize/postinstall/lib.sh
+INSTALL_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
+export INSTALL_ROOT
+if [ -f "$INSTALL_ROOT/postinstall/lib.sh" ]; then
+  source "$INSTALL_ROOT/postinstall/lib.sh"
+else
+  echo "Error: postinstall/lib.sh not found at $INSTALL_ROOT/postinstall/lib.sh"
+  echo "Script location: $SCRIPT_DIR"
+  echo "Install root: $INSTALL_ROOT"
+  echo "Please run bootstrap-postinstall.scm first to download all required files."
+  exit 1
+fi
+
+# Add Framework 13 specific customizations (platform-specific)
+add_framework_hardware() {
+  msg "Adding Framework 13 Hardware Support"
+
+  if grep -q "linux-firmware" "$CONFIG_FILE"; then
+    warn "Hardware firmware already configured"
+    return
+  fi
+
+  backup_config
+
+  # Add firmware module
+  if ! grep -q "(gnu packages linux)" "$CONFIG_FILE"; then
+    safe_edit_config '/^(use-modules/a\             (gnu packages linux)'
+  fi
+
+  # Add firmware to operating-system
+  safe_edit_config '/^(operating-system/a\ (firmware (list linux-firmware))'
+
+  info "✓ Added WiFi/Bluetooth firmware (linux-firmware)"
+  info "Note: For best results, also add nonguix channel for proprietary firmware"
+}
+
+# Main menu
+main_menu() {
+  while true; do
+    clear_screen
+    msg "Framework 13 Laptop Customization Tool"
+    echo ""
+    echo "Platform: Framework 13 (Single-boot, Guix only)"
+    echo "Current config: $CONFIG_FILE"
+    echo ""
+    echo "Hardware Support:"
+    echo "  4) Add Framework 13 hardware support (WiFi/BT firmware)"
+    echo ""
+    echo "Desktop Environment:"
+    echo "  2) Add desktop environment (GNOME/Xfce/MATE/LXQt)"
+    echo ""
+    echo "Essential Services:"
+    echo "  1) Add SSH service (optional for laptop)"
+    echo "  3) Add common packages (git, vim, emacs, go, etc.)"
+    echo ""
+    echo "Advanced:"
+    echo "  5) Show nonguix channel info (proprietary software)"
+    echo ""
+    echo "Shared Recipes:"
+    echo "  s) Install Spacemacs (Emacs distribution)"
+    echo "  d) Install development tools (git, vim, python, etc.)"
+    echo "  f) Install fonts (Fira Code, JetBrains Mono, etc.)"
+    echo ""
+    echo "Actions:"
+    echo "  r) Apply changes (reconfigure system)"
+    echo "  e) Edit config manually"
+    echo "  v) View current config"
+    echo "  q) Quit"
+    echo ""
+    info "Tip: Start with option 4 (WiFi firmware) to get network connectivity"
+    echo ""
+    read -r -p "Select option: " choice
+
+    case "$choice" in
+      1) add_ssh; read -p "Press Enter to continue..." ;;
+      2) add_desktop; read -p "Press Enter to continue..." ;;
+      3) add_packages; read -p "Press Enter to continue..." ;;
+      4) add_framework_hardware; read -p "Press Enter to continue..." ;;
+      5) add_nonguix_info; read -p "Press Enter to continue..." ;;
+      s) source "$INSTALL_ROOT/postinstall/recipes/add-spacemacs.sh" && add_spacemacs; read -p "Press Enter to continue..." ;;
+      d) source "$INSTALL_ROOT/postinstall/recipes/add-development.sh" && add_development; read -p "Press Enter to continue..." ;;
+      f) source "$INSTALL_ROOT/postinstall/recipes/add-fonts.sh" && add_fonts; read -p "Press Enter to continue..." ;;
+      r) reconfigure; read -p "Press Enter to continue..." ;;
+      e) edit_config; read -p "Press Enter to continue..." ;;
+      v) view_config ;;
+      q) msg "Goodbye!"; exit 0 ;;
+      *) err "Invalid option"; sleep 1 ;;
+    esac
+  done
+}
+
+# Check if running as root
+if [[ $EUID -eq 0 ]]; then
+  err "Do not run this script as root"
+  info "Run as normal user (will prompt for sudo when needed)"
+  exit 1
+fi
+
+# Check if config exists
+if [[ ! -f "$CONFIG_FILE" ]]; then
+  err "Config file not found: $CONFIG_FILE"
+  info "Are you running this on an installed Guix system?"
+  exit 1
+fi
+
+# Run main menu
+main_menu

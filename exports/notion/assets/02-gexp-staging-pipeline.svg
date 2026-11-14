@@ -1,0 +1,207 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1000" width="1600" height="1000">
+  <defs>
+    <!-- Blueprint subtle grid -->
+    <pattern id="smallGrid" width="20" height="20" patternUnits="userSpaceOnUse">
+      <path d="M 20 0 L 0 0 0 20" fill="none" stroke="#232738" stroke-width="0.6" stroke-opacity="0.55"/>
+    </pattern>
+    <pattern id="largeGrid" width="100" height="100" patternUnits="userSpaceOnUse">
+      <rect width="100" height="100" fill="url(#smallGrid)"/>
+      <path d="M 100 0 L 0 0 0 100" fill="none" stroke="#2f3549" stroke-width="1" stroke-opacity="0.65"/>
+    </pattern>
+
+    <!-- Soft drop shadow -->
+    <filter id="shadow" x="-6%" y="-6%" width="112%" height="116%">
+      <feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#0a0b10" flood-opacity="0.65"/>
+    </filter>
+    <filter id="shadowSm" x="-6%" y="-6%" width="112%" height="116%">
+      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0a0b10" flood-opacity="0.5"/>
+    </filter>
+
+    <!-- Header gradient -->
+    <linearGradient id="headerGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#1f2335"/>
+      <stop offset="50%" stop-color="#24283b"/>
+      <stop offset="100%" stop-color="#1f2335"/>
+    </linearGradient>
+
+    <!-- Arrow markers for each accent color -->
+    <marker id="arrow-blue" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 1.5 L 9 5 L 0 8.5 z" fill="#7aa2f7"/>
+    </marker>
+    <marker id="arrow-cyan" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 1.5 L 9 5 L 0 8.5 z" fill="#7dcfff"/>
+    </marker>
+    <marker id="arrow-green" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 1.5 L 9 5 L 0 8.5 z" fill="#9ece6a"/>
+    </marker>
+    <marker id="arrow-magenta" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 1.5 L 9 5 L 0 8.5 z" fill="#bb9af7"/>
+    </marker>
+    <marker id="arrow-amber" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 1.5 L 9 5 L 0 8.5 z" fill="#e0af68"/>
+    </marker>
+    <marker id="arrow-orange" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 1.5 L 9 5 L 0 8.5 z" fill="#ff9e64"/>
+    </marker>
+    <marker id="arrow-red" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 1.5 L 9 5 L 0 8.5 z" fill="#f7768e"/>
+    </marker>
+    <marker id="arrow-fg" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 1.5 L 9 5 L 0 8.5 z" fill="#a9b1d6"/>
+    </marker>
+  </defs>
+
+  <!-- Canvas Background -->
+  <rect width="1600" height="1000" fill="#1a1b26"/>
+  <rect width="1600" height="1000" fill="url(#largeGrid)"/>
+
+  <!-- Outer Frame -->
+  <rect x="12" y="12" width="1576" height="976" rx="12" fill="none" stroke="#414868" stroke-width="1.5"/>
+
+  <!-- Top Title Banner -->
+  <rect x="24" y="22" width="1552" height="74" rx="10" fill="url(#headerGrad)" stroke="#414868" stroke-width="1.5" filter="url(#shadowSm)"/>
+  <rect x="24" y="22" width="8" height="74" rx="4" fill="#7aa2f7"/>
+  <text x="48" y="53" font-family="'Avenir Next', 'Helvetica Neue', -apple-system, BlinkMacSystemFont, sans-serif" font-size="22" font-weight="800" fill="#ffffff" letter-spacing="0.8">GUIX G-EXPRESSIONS (#~, #$, #$@): TWO WORLDS OF TIME</text>
+  <text x="48" y="79" font-family="'Avenir Next', 'Helvetica Neue', -apple-system, BlinkMacSystemFont, sans-serif" font-size="13.5" font-weight="500" fill="#7dcfff" letter-spacing="0.3">Multi-Stage Programming — How Host Scheme Evaluation Lowers Code + Dependencies into Isolated /gnu/store Derivations</text>
+
+  <!-- Top-Right Tag Pill -->
+  <rect x="1270" y="36" width="290" height="30" rx="6" fill="#16161e" stroke="#414868" stroke-width="1"/>
+  <text x="1415" y="56" text-anchor="middle" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="11.5" font-weight="700" fill="#bb9af7">DIAGRAM 02 · G-EXPRESSION STAGING</text>
+
+<g>
+  <rect x="24" y="112" width="500" height="680" rx="10" fill="#1f2335" stroke="#414868" stroke-width="1.5" filter="url(#shadow)"/>
+  <rect x="24" y="112" width="500" height="36" rx="10" fill="#16161e" stroke="#7aa2f7" stroke-width="1.2"/>
+  <rect x="24" y="112" width="8" height="36" rx="4" fill="#7aa2f7"/>
+  <text x="42" y="135" font-family="'Avenir Next', 'Helvetica Neue', -apple-system, BlinkMacSystemFont, sans-serif" font-size="13.5" font-weight="700" fill="#7aa2f7" letter-spacing="0.4">WORLD 1: HOST SCHEME EVALUATION</text>
+  <rect x="398.5" y="118" width="115.5" height="24" rx="5" fill="#24283b" stroke="#7aa2f7" stroke-width="1"/>
+  <text x="456.2" y="134" text-anchor="middle" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="10.5" font-weight="700" fill="#ffffff">STAGE 0 · NOW</text>
+</g>
+<g>
+  <rect x="550" y="112" width="480" height="680" rx="10" fill="#1f2335" stroke="#414868" stroke-width="1.5" filter="url(#shadow)"/>
+  <rect x="550" y="112" width="480" height="36" rx="10" fill="#16161e" stroke="#e0af68" stroke-width="1.2"/>
+  <rect x="550" y="112" width="8" height="36" rx="4" fill="#e0af68"/>
+  <text x="568" y="135" font-family="'Avenir Next', 'Helvetica Neue', -apple-system, BlinkMacSystemFont, sans-serif" font-size="13.5" font-weight="700" fill="#e0af68" letter-spacing="0.4">COMPILER BRIDGE: LOWERING TO .drv</text>
+  <rect x="904.5" y="118" width="115.5" height="24" rx="5" fill="#24283b" stroke="#e0af68" stroke-width="1"/>
+  <text x="962.2" y="134" text-anchor="middle" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="10.5" font-weight="700" fill="#ffffff">GEXP COMPILER</text>
+</g>
+<g>
+  <rect x="1056" y="112" width="520" height="680" rx="10" fill="#1f2335" stroke="#414868" stroke-width="1.5" filter="url(#shadow)"/>
+  <rect x="1056" y="112" width="520" height="36" rx="10" fill="#16161e" stroke="#9ece6a" stroke-width="1.2"/>
+  <rect x="1056" y="112" width="8" height="36" rx="4" fill="#9ece6a"/>
+  <text x="1074" y="135" font-family="'Avenir Next', 'Helvetica Neue', -apple-system, BlinkMacSystemFont, sans-serif" font-size="13.5" font-weight="700" fill="#9ece6a" letter-spacing="0.4">WORLD 2: BUILD &amp; SHEPHERD RUNTIME</text>
+  <rect x="1435.5" y="118" width="130.5" height="24" rx="5" fill="#24283b" stroke="#9ece6a" stroke-width="1"/>
+  <text x="1500.8" y="134" text-anchor="middle" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="10.5" font-weight="700" fill="#ffffff">STAGE 1 · LATER</text>
+</g>
+<text x="44" y="172" font-family="'Avenir Next', 'Helvetica Neue', -apple-system, BlinkMacSystemFont, sans-serif" font-size="13" font-weight="700" fill="#ffffff">Context: Running <tspan font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" fill="#7dcfff">guix build</tspan>, <tspan font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" fill="#7dcfff">guix system</tspan>, or Geiser REPL</text>
+<text x="44" y="192" font-family="'Avenir Next', 'Helvetica Neue', -apple-system, BlinkMacSystemFont, sans-serif" font-size="12" fill="#a9b1d6">Has access to Guix package modules, channels, and lexical variables.</text>
+<rect x="44" y="206" width="460" height="236" rx="8" fill="#16161e" stroke="#7aa2f7" stroke-width="1.5"/>
+<text x="60" y="228" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="11.5" fill="#565f89">;; Evaluated in Host Guile VM (World 1):</text>
+<text x="60" y="250" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="12" fill="#ffffff">(<tspan fill="#bb9af7">use-modules</tspan> (guix gexp) (gnu packages admin))</text>
+<text x="60" y="274" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="12.5" fill="#ffffff">(<tspan fill="#bb9af7">let</tspan> ((pkg        <tspan fill="#7aa2f7">shepherd</tspan>)</text>
+<text x="104" y="296" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="12.5" fill="#ffffff">(extra-args '(<tspan fill="#9ece6a">"--silent"</tspan> <tspan fill="#9ece6a">"--json"</tspan>)))</text>
+<text x="76" y="322" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="13" font-weight="700" fill="#7dcfff">#~(<tspan fill="#bb9af7">begin</tspan></text>
+<text x="108" y="344" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="12" fill="#ffffff">(<tspan fill="#7aa2f7">system*</tspan> <tspan fill="#e0af68" font-weight="700">#$(file-append pkg "/bin/herd")</tspan></text>
+<text x="174" y="366" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="12.5" fill="#9ece6a">"status"</text>
+<text x="174" y="388" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="12.5" font-weight="700" fill="#ff9e64">#$@extra-args</text>
+<text x="174" y="410" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="12.5" font-weight="700" fill="#f7768e">#$output<tspan fill="#ffffff">)))</tspan></text>
+<text x="60" y="431" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="11" fill="#7dcfff">;; Returns: #&lt;gexp (begin (system* #&lt;gexp-input ...&gt;))&gt;</text>
+<rect x="44" y="456" width="460" height="74" rx="7" fill="#292e42" stroke="#7dcfff" stroke-width="1.4"/>
+<text x="60" y="480" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="14" font-weight="700" fill="#7dcfff">#~exp</text>
+<text x="155" y="480" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="12" fill="#a9b1d6">≡ (gexp exp)</text>
+<text x="60" y="506" font-family="'Avenir Next', 'Helvetica Neue', -apple-system, BlinkMacSystemFont, sans-serif" font-size="12" fill="#c0caf5">Freezes exp for World 2 + records all referenced store inputs.</text>
+<rect x="44" y="538" width="460" height="74" rx="7" fill="#292e42" stroke="#e0af68" stroke-width="1.4"/>
+<text x="60" y="562" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="14" font-weight="700" fill="#e0af68">#$val</text>
+<text x="155" y="562" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="12" fill="#a9b1d6">≡ (ungexp val)</text>
+<text x="60" y="588" font-family="'Avenir Next', 'Helvetica Neue', -apple-system, BlinkMacSystemFont, sans-serif" font-size="12" fill="#c0caf5">Evaluates val NOW in World 1; splices its /gnu/store path.</text>
+<rect x="44" y="620" width="460" height="74" rx="7" fill="#292e42" stroke="#ff9e64" stroke-width="1.4"/>
+<text x="60" y="644" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="14" font-weight="700" fill="#ff9e64">#$@lst</text>
+<text x="155" y="644" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="12" fill="#a9b1d6">≡ (ungexp-splicing lst)</text>
+<text x="60" y="670" font-family="'Avenir Next', 'Helvetica Neue', -apple-system, BlinkMacSystemFont, sans-serif" font-size="12" fill="#c0caf5">Evaluates list NOW in World 1; splices elements inline.</text>
+<rect x="44" y="702" width="460" height="74" rx="7" fill="#292e42" stroke="#f7768e" stroke-width="1.4"/>
+<text x="60" y="726" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="14" font-weight="700" fill="#f7768e">#$output</text>
+<text x="155" y="726" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="12" fill="#a9b1d6">≡ (ungexp output)</text>
+<text x="60" y="752" font-family="'Avenir Next', 'Helvetica Neue', -apple-system, BlinkMacSystemFont, sans-serif" font-size="12" fill="#c0caf5">Expands to target derivation&#x27;s allocated $out store path.</text>
+<text x="570" y="172" font-family="'Avenir Next', 'Helvetica Neue', -apple-system, BlinkMacSystemFont, sans-serif" font-size="13" font-weight="700" fill="#ffffff">Lowering Pipeline (<tspan font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" fill="#e0af68">gexp-&gt;derivation</tspan> + RPC to <tspan font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" fill="#e0af68">guix-daemon</tspan>)</text>
+<text x="570" y="192" font-family="'Avenir Next', 'Helvetica Neue', -apple-system, BlinkMacSystemFont, sans-serif" font-size="12" fill="#a9b1d6">Compiles high-level Scheme objects into a concrete store DAG.</text>
+<rect x="570" y="208" width="440" height="118" rx="8" fill="#292e42" stroke="#e0af68" stroke-width="1.5"/>
+<text x="588" y="232" font-family="'Avenir Next', 'Helvetica Neue', -apple-system, BlinkMacSystemFont, sans-serif" font-size="13" font-weight="700" fill="#e0af68">STEP 1: Lower Every #$ Input via (lower-object obj)</text>
+<text x="588" y="256" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="11.5" fill="#c0caf5">• <tspan fill="#7aa2f7">shepherd</tspan> (&lt;package&gt;) →</text>
+<text x="604" y="275" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="11" fill="#9ece6a">/gnu/store/5p9k...-shepherd-1.0.0.drv</text>
+<text x="588" y="297" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="11.5" fill="#c0caf5">• <tspan fill="#ff9e64">extra-args</tspan> (pure Scheme list) →</text>
+<text x="604" y="315" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="11" fill="#7dcfff">Serialized inline as literal strings: "--silent" "--json"</text>
+<path d="M 790 326 L 790 352" stroke="#e0af68" stroke-width="2.2" marker-end="url(#arrow-amber)"/>
+<rect x="570" y="356" width="440" height="232" rx="8" fill="#16161e" stroke="#e0af68" stroke-width="1.8"/>
+<text x="588" y="382" font-family="'Avenir Next', 'Helvetica Neue', -apple-system, BlinkMacSystemFont, sans-serif" font-size="13" font-weight="700" fill="#e0af68">STEP 2: Emit Content-Addressed Derivation (.drv)</text>
+<text x="588" y="404" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="11.5" font-weight="700" fill="#7dcfff">/gnu/store/8k2m...-herd-wrapper.drv</text>
+<line x1="588" y1="414" x2="992" y2="414" stroke="#414868" stroke-width="1"/>
+<text x="588" y="436" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="11.5" fill="#ffffff"><tspan fill="#bb9af7">Outputs:</tspan> [("out", "/gnu/store/9z7x...-herd-wrapper")]</text>
+<text x="588" y="460" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="11.5" fill="#ffffff"><tspan fill="#bb9af7">InputDrvs:</tspan></text>
+<text x="602" y="480" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="11" fill="#9ece6a">• /gnu/store/5p9k...-shepherd-1.0.0.drv  ["out"]</text>
+<text x="602" y="500" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="11" fill="#9ece6a">• /gnu/store/c3d4...-guile-3.0.9.drv     ["out"]</text>
+<text x="588" y="524" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="11.5" fill="#ffffff"><tspan fill="#bb9af7">Builder:</tspan> "/gnu/store/x1y2...-guile-3.0.9/bin/guile"</text>
+<text x="588" y="546" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="11.5" fill="#ffffff"><tspan fill="#bb9af7">Args:</tspan>    ["--no-auto-compile", "...-herd-wrapper-builder"]</text>
+<text x="588" y="572" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="11" fill="#e0af68">★ SHA-256 hash covers ALL inputs, builder script &amp; env!</text>
+<rect x="570" y="606" width="440" height="168" rx="8" fill="#292e42" stroke="#bb9af7" stroke-width="1.5"/>
+<text x="588" y="632" font-family="'Avenir Next', 'Helvetica Neue', -apple-system, BlinkMacSystemFont, sans-serif" font-size="13.5" font-weight="800" fill="#bb9af7">THE AUTOMATIC DEPENDENCY INVARIANT</text>
+<text x="588" y="656" font-family="'Avenir Next', 'Helvetica Neue', -apple-system, BlinkMacSystemFont, sans-serif" font-size="12" fill="#c0caf5">In traditional Dockerfiles or bash scripts, referencing a</text>
+<text x="588" y="675" font-family="'Avenir Next', 'Helvetica Neue', -apple-system, BlinkMacSystemFont, sans-serif" font-size="12" fill="#c0caf5">binary path and installing its package are separate steps.</text>
+<text x="588" y="702" font-family="'Avenir Next', 'Helvetica Neue', -apple-system, BlinkMacSystemFont, sans-serif" font-size="12" font-weight="700" fill="#7dcfff">In Guix, unquoting <tspan font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" fill="#e0af68">#$shepherd</tspan> does BOTH atomically:</text>
+<text x="588" y="724" font-family="'Avenir Next', 'Helvetica Neue', -apple-system, BlinkMacSystemFont, sans-serif" font-size="12" fill="#a9b1d6">1. Rewrites the symbol to <tspan font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" fill="#9ece6a">/gnu/store/...-shepherd-1.0.0</tspan></text>
+<text x="588" y="744" font-family="'Avenir Next', 'Helvetica Neue', -apple-system, BlinkMacSystemFont, sans-serif" font-size="12" fill="#a9b1d6">2. Registers <tspan font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" fill="#9ece6a">shepherd</tspan> in the derivation's InputDrvs</text>
+<text x="588" y="762" font-family="'Avenir Next', 'Helvetica Neue', -apple-system, BlinkMacSystemFont, sans-serif" font-size="12" font-weight="700" fill="#9ece6a">→ Impossible to have an undeclared runtime dependency!</text>
+<text x="1076" y="172" font-family="'Avenir Next', 'Helvetica Neue', -apple-system, BlinkMacSystemFont, sans-serif" font-size="13" font-weight="700" fill="#ffffff">Context: Materialized Builder Script / Shepherd Service</text>
+<text x="1076" y="192" font-family="'Avenir Next', 'Helvetica Neue', -apple-system, BlinkMacSystemFont, sans-serif" font-size="12" fill="#a9b1d6">All <tspan font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" fill="#7dcfff">#~</tspan>, <tspan font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" fill="#e0af68">#$</tspan>, <tspan font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" fill="#ff9e64">#$@</tspan> markers are gone — only pure Scheme + store paths remain:</text>
+<rect x="1076" y="206" width="480" height="196" rx="8" fill="#16161e" stroke="#9ece6a" stroke-width="1.6"/>
+<text x="1092" y="230" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="11.5" fill="#565f89">;; Materialized in /gnu/store/...-herd-wrapper-builder:</text>
+<text x="1092" y="256" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="12.5" fill="#ffffff">(<tspan fill="#bb9af7">begin</tspan></text>
+<text x="1110" y="280" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="12.5" fill="#ffffff">(<tspan fill="#7aa2f7">system*</tspan></text>
+<text x="1130" y="304" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="11.5" font-weight="700" fill="#e0af68">"/gnu/store/4x8m...-shepherd-1.0.0/bin/herd"</text>
+<text x="1130" y="328" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="12" fill="#9ece6a">"status"</text>
+<text x="1130" y="352" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="12" font-weight="700" fill="#ff9e64">"--silent" "--json"</text>
+<text x="1130" y="376" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="11.5" font-weight="700" fill="#f7768e">"/gnu/store/9z7x...-herd-wrapper"<tspan fill="#ffffff">))</tspan></text>
+<rect x="1076" y="420" width="480" height="168" rx="8" fill="#292e42" stroke="#9ece6a" stroke-width="1.5"/>
+<text x="1094" y="446" font-family="'Avenir Next', 'Helvetica Neue', -apple-system, BlinkMacSystemFont, sans-serif" font-size="13.5" font-weight="700" fill="#9ece6a">EXECUTION TARGET A: Isolated Build Sandbox (guix-daemon)</text>
+<text x="1094" y="470" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="11.5" fill="#c0caf5">• Linux namespaces: PID, mount, network (loopback only), IPC, UTS</text>
+<text x="1094" y="492" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="11.5" fill="#c0caf5">• No /bin, no /usr, no /lib, no $HOME, no internet access</text>
+<text x="1094" y="514" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="11.5" fill="#c0caf5">• Only declared InputDrvs bind-mounted R/O in /gnu/store</text>
+<text x="1094" y="536" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="11.5" fill="#c0caf5">• Writes verified result to <tspan fill="#f7768e">$output</tspan> (/gnu/store/9z7x...)</text>
+<text x="1094" y="562" font-family="'Avenir Next', 'Helvetica Neue', -apple-system, BlinkMacSystemFont, sans-serif" font-size="12" font-weight="700" fill="#7dcfff">→ Bit-for-bit reproducible across any machine!</text>
+<rect x="1076" y="604" width="480" height="170" rx="8" fill="#292e42" stroke="#7dcfff" stroke-width="1.5"/>
+<text x="1094" y="630" font-family="'Avenir Next', 'Helvetica Neue', -apple-system, BlinkMacSystemFont, sans-serif" font-size="13.5" font-weight="700" fill="#7dcfff">EXECUTION TARGET B: Shepherd PID 1 Service Action</text>
+<text x="1094" y="654" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="11.5" fill="#c0caf5">• Used in <tspan fill="#bb9af7">(start #~(make-forkexec-constructor ...))</tspan></text>
+<text x="1094" y="676" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="11.5" fill="#c0caf5">• Used in system activation scripts (<tspan fill="#bb9af7">activation-service-type</tspan>)</text>
+<text x="1094" y="698" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="11.5" fill="#c0caf5">• Every daemon command has its exact store hash baked in</text>
+<text x="1094" y="720" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="11.5" fill="#c0caf5">• GC root from <tspan fill="#9ece6a">/var/guix/profiles/system</tspan> protects all inputs</text>
+<text x="1094" y="746" font-family="'Avenir Next', 'Helvetica Neue', -apple-system, BlinkMacSystemFont, sans-serif" font-size="12" font-weight="700" fill="#e0af68">→ Zero $PATH pollution or library version drift at runtime!</text>
+<path d="M 524 310 L 548 310" stroke="#e0af68" stroke-width="3" marker-end="url(#arrow-amber)"/>
+<path d="M 1030 310 L 1054 310" stroke="#9ece6a" stroke-width="3" marker-end="url(#arrow-green)"/>
+<g>
+  <rect x="24" y="806" width="1552" height="142" rx="10" fill="#1f2335" stroke="#414868" stroke-width="1.5" filter="url(#shadow)"/>
+  <rect x="24" y="806" width="1552" height="36" rx="10" fill="#16161e" stroke="#7dcfff" stroke-width="1.2"/>
+  <rect x="24" y="806" width="8" height="36" rx="4" fill="#7dcfff"/>
+  <text x="42" y="829" font-family="'Avenir Next', 'Helvetica Neue', -apple-system, BlinkMacSystemFont, sans-serif" font-size="13.5" font-weight="700" fill="#7dcfff" letter-spacing="0.4">HIGH-LEVEL G-EXPRESSION CONSTRUCTORS (FROM (guix gexp))</text>
+  <rect x="1465.5" y="812" width="100.5" height="24" rx="5" fill="#24283b" stroke="#7dcfff" stroke-width="1"/>
+  <text x="1515.8" y="828" text-anchor="middle" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="10.5" font-weight="700" fill="#ffffff">CHEAT SHEET</text>
+</g>
+<rect x="44" y="852" width="368" height="82" rx="7" fill="#16161e" stroke="#7aa2f7" stroke-width="1.4"/>
+<text x="58" y="874" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="13" font-weight="700" fill="#7aa2f7">computed-file</text>
+<text x="58" y="896" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="10.5" fill="#ffffff">(computed-file &quot;name&quot; #~(mkdir #$output ...))</text>
+<text x="58" y="918" font-family="'Avenir Next', 'Helvetica Neue', -apple-system, BlinkMacSystemFont, sans-serif" font-size="11" fill="#a9b1d6">Runs a builder G-Exp in the sandbox to produce a file or directory.</text>
+<rect x="425" y="852" width="368" height="82" rx="7" fill="#16161e" stroke="#9ece6a" stroke-width="1.4"/>
+<text x="439" y="874" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="13" font-weight="700" fill="#9ece6a">program-file</text>
+<text x="439" y="896" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="10.5" fill="#ffffff">(program-file &quot;script.scm&quot; #~(begin ...))</text>
+<text x="439" y="918" font-family="'Avenir Next', 'Helvetica Neue', -apple-system, BlinkMacSystemFont, sans-serif" font-size="11" fill="#a9b1d6">Creates an executable Guile script in /gnu/store with #! store shebang.</text>
+<rect x="806" y="852" width="368" height="82" rx="7" fill="#16161e" stroke="#bb9af7" stroke-width="1.4"/>
+<text x="820" y="874" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="13" font-weight="700" fill="#bb9af7">scheme-file</text>
+<text x="820" y="896" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="10.5" fill="#ffffff">(scheme-file &quot;config.scm&quot; #~((port . 8080)))</text>
+<text x="820" y="918" font-family="'Avenir Next', 'Helvetica Neue', -apple-system, BlinkMacSystemFont, sans-serif" font-size="11" fill="#a9b1d6">Writes a non-executable Scheme S-expression data/code file to store.</text>
+<rect x="1187" y="852" width="368" height="82" rx="7" fill="#16161e" stroke="#e0af68" stroke-width="1.4"/>
+<text x="1201" y="874" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="13" font-weight="700" fill="#e0af68">mixed-text-file</text>
+<text x="1201" y="896" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="10.5" fill="#ffffff">(mixed-text-file &quot;nginx.conf&quot; &quot;root &quot; nginx &quot;/html;&quot;)</text>
+<text x="1201" y="918" font-family="'Avenir Next', 'Helvetica Neue', -apple-system, BlinkMacSystemFont, sans-serif" font-size="11" fill="#a9b1d6">Concatenates strings and package store paths into a config file.</text>
+
+  <!-- Footer -->
+  <text x="32" y="980" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="11" fill="#565f89">02-gexp-staging-pipeline · World 1 (Host Scheme) → Lowered .drv → World 2 (Store Sandbox / Shepherd)</text>
+  <text x="1568" y="980" text-anchor="end" font-family="'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Menlo', 'Monaco', monospace" font-size="11" fill="#565f89">TOKYO NIGHT TECHNICAL BLUEPRINT · GNU GUILE / GUIX ARCHITECTURE</text>
+</svg>

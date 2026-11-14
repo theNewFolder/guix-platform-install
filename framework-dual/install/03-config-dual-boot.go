@@ -1,0 +1,623 @@
+package install
+
+import (
+	"fmt"
+	"os"
+	"path/filepath"
+	"strings"
+
+	"github.com/durantschoon/guix-platform-install/lib"
+)
+
+// Step03ConfigDualBoot generates the Guix system configuration
+type Step03ConfigDualBoot struct{}
+
+func (s *Step03ConfigDualBoot) RunWarnings(state *State) error {
+  // Auto-detect missing variables if previous steps were skipped
+  if state.Device == "" {
+    device, err := lib.DetectDeviceFromState(state.Device, "framework-dual")
+    if err != nil {
+      return err
+    }
+    state.Device = device
+  }
+
+  if state.EFI == "" {
+    efiPart, err := lib.FindEFIPartition(state.Device)
+    if err != nil {
+      return err
+    }
+    state.EFI = efiPart
+  }
+
+  if state.Root == "" {
+    rootPart, err := lib.FindGuixRootPartition(state.Device)
+    if err != nil {
+      return err
+    }
+    state.Root = rootPart
+  }
+
+  // Verify required variables
+  if state.Root == "" || state.EFI == "" || state.Device == "" {
+    return fmt.Errorf("required variables not set (ROOT, EFI, DEVICE). Please run previous steps or set environment variables")
+  }
+
+  lib.PrintStepHeader(3, "Configuration Generation")
+  fmt.Println()
+  fmt.Println("This step will:")
+  fmt.Println("  1. Setup nonguix channel (prompts for user consent)")
+  fmt.Println("  2. Generate minimal Guix system configuration")
+  fmt.Println("  3. Write configuration to /mnt/etc/config.scm")
+  fmt.Println("  4. Configuration uses partition labels (GUIX_ROOT, EFI, DATA)")
+  fmt.Println()
+  fmt.Println("Environment variables used by this step:")
+  fmt.Printf("  ROOT          - %s (from Step01)\n", state.Root)
+  fmt.Printf("  EFI           - %s (from Step01)\n", state.EFI)
+  if state.HomePartition != "" {
+    fmt.Printf("  DATA           - %s (from Step01)\n", state.HomePartition)
+  }
+  fmt.Println()
+  fmt.Println("Optional environment variables (with defaults):")
+  fmt.Printf("  USER_NAME     - %s (default: guix)\n", lib.GetEnvOrDefault(state.UserName, "guix"))
+  fmt.Printf("  FULL_NAME     - %s (default: Guix User)\n", lib.GetEnvOrDefault(state.FullName, "Guix User"))
+  fmt.Printf("  TIMEZONE      - %s (default: America/New_York)\n", lib.GetEnvOrDefault(state.Timezone, "America/New_York"))
+  fmt.Printf("  HOST_NAME     - %s (default: guix-system)\n", lib.GetEnvOrDefault(state.HostName, "guix-system"))
+  fmt.Println()
+  fmt.Println("The generated config is minimal - customize after installation.")
+  fmt.Println("Idempotency: Skips generation if /mnt/etc/config.scm already exists")
+  fmt.Println()
+
+  return nil
+}
+
+func (s *Step03ConfigDualBoot) RunClean(state *State) error {
+  // Verify required variables
+  if state.Root == "" || state.EFI == "" || state.Device == "" {
+    return fmt.Errorf("required variables not set (ROOT, EFI, DEVICE)")
+  }
+
+  // Check if config already exists (idempotency)
+  configPath := "/mnt/etc/config.scm"
+  channelsPath := "/tmp/channels.scm"
+  configExists := false
+  if _, err := os.Stat(configPath); err == nil {
+    configExists = true
+    fmt.Printf("Configuration file %s already exists\n", configPath)
+
+    // Check if channels.scm also exists
+    if _, err := os.Stat(channelsPath); err == nil {
+      fmt.Println("Channels file also exists - skipping config generation")
+      fmt.Println("(idempotent - safe for reruns)")
+      fmt.Println()
+      fmt.Println("To regenerate config and channels, remove both files:")
+      fmt.Printf("  rm %s %s\n", configPath, channelsPath)
+      return nil
+    }
+
+    // Config exists but channels.scm doesn't - need to setup nonguix
+    fmt.Println("But channels.scm is missing - will setup nonguix channel")
+    fmt.Println()
+  }
+
+
+  // Framework 13 uses UEFI - force it for dual-boot
+  if state.BootMode == "" {
+    state.BootMode = "uefi"
+  }
+
+  bootloader := ""
+  targets := ""
+  if state.BootMode == "uefi" {
+    bootloader = "grub-efi-bootloader"
+    targets = `'("/boot/efi")`
+    fmt.Println("UEFI boot mode - using grub-efi-bootloader")
+  } else {
+    return fmt.Errorf("dual-boot configuration requires UEFI mode")
+  }
+
+  fmt.Println()
+  fmt.Println("=== Generating Minimal Config ===")
+  fmt.Println("This creates a bare-bones bootable system with:")
+  fmt.Println("  - Base system packages only")
+  fmt.Println("  - No desktop environment")
+  fmt.Println("  - No SSH (add after installation)")
+  fmt.Println()
+  fmt.Println("To customize after installation, use the guix-customize script")
+  fmt.Println()
+
+  // Set defaults for user info
+  if state.UserName == "" {
+    state.UserName = "guix"
+  }
+  if state.FullName == "" {
+    state.FullName = "Guix User"
+  }
+  if state.Timezone == "" {
+    state.Timezone = "America/New_York"
+  }
+  if state.HostName == "" {
+    state.HostName = "guix-system"
+  }
+
+  // Setup nonguix channel for proprietary firmware and kernel
+  fmt.Println()
+  fmt.Println("=== Configuring Nonguix Channel ===")
+  homeDir := os.Getenv("HOME")
+  if homeDir == "" {
+    homeDir = "/root"
+  }
+  homeChannelsPath := filepath.Join(homeDir, "channels.scm")
+  if _, err := os.Stat(homeChannelsPath); err == nil {
+    fmt.Printf("Nonguix channel already configured (using existing %s)\n", homeChannelsPath)
+  } else if _, err := os.Stat("/tmp/channels.scm"); err == nil {
+    fmt.Println("Nonguix channel already configured (using existing /tmp/channels.scm)")
+  } else {
+    fmt.Println("Setting up nonguix channel for proprietary firmware...")
+  }
+
+  if err := lib.SetupNonguixChannel(state.GuixPlatform); err != nil {
+    return fmt.Errorf("failed to setup nonguix channel: %w", err)
+  }
+  fmt.Println()
+
+  // Prompt for keyboard layout if not already set
+  if state.KeyboardLayout == "" {
+    layout, err := lib.PromptKeyboardLayout()
+    if err != nil {
+      return fmt.Errorf("failed to prompt for keyboard layout: %w", err)
+    }
+    state.KeyboardLayout = layout
+  }
+
+  // Generate and write config if it doesn't exist
+  if !configExists {
+    // Generate config
+    // Note: Module filtering happens in generateMinimalConfig using known built-in modules
+    // If kernel package is available, we could check it, but for now we use a static list
+    // based on kernel 6.6.16 configuration
+    config := s.generateMinimalConfig(state, bootloader, targets)
+
+    // Write to file
+    if err := os.MkdirAll("/mnt/etc", 0755); err != nil {
+      return err
+    }
+
+    if err := os.WriteFile("/mnt/etc/config.scm", []byte(config), 0644); err != nil {
+      return fmt.Errorf("failed to write config: %w", err)
+    }
+
+    fmt.Println()
+    fmt.Println("=== Generated config.scm ===")
+    fmt.Println(config)
+    fmt.Println()
+    fmt.Println("Configuration written to /mnt/etc/config.scm")
+    fmt.Println("  This will install GRUB to the existing EFI alongside Pop!_OS")
+  } else {
+    fmt.Println()
+    fmt.Println("[OK] Config file already exists, channels.scm has been created")
+    fmt.Println("     Ready to proceed with system init")
+  }
+
+  return nil
+}
+
+func (s *Step03ConfigDualBoot) generateMinimalConfig(state *State, bootloader, targets string) string {
+  dataFS := ""
+  if state.HomePartition != "" {
+    // no-atime goes in 'flags', NOT in 'options'.
+    //
+    // 'options' is passed verbatim as mount(2)'s data argument, i.e. it may
+    // only contain filesystem-specific parameters. A VFS-level token there
+    // makes the kernel reject the mount with "ext4: Unknown parameter
+    // 'noatime'". On a non-root filesystem that is unrecoverable in place:
+    // file-system-/data fails, so the file-systems target fails, so
+    // user-processes never starts, and the machine boots with no login ttys.
+    // 'flags' takes symbols and is converted to mount flag bits instead.
+    dataFS = `         (file-system
+          (mount-point "/data")
+          (device (file-system-label "DATA"))
+          (type "ext4")
+          (flags '(no-atime)))
+`
+  }
+
+  // Generate keyboard layout configuration if set
+  keyboardLayoutConfig := ""
+  if state.KeyboardLayout != "" {
+    // Parse the layout string - format is "layout" or "layout:option"
+    parts := strings.Split(state.KeyboardLayout, ":")
+    layout := parts[0]
+    if len(parts) > 1 {
+      // Has options (e.g., "us:ctrl:swapcaps")
+      options := strings.Join(parts[1:], ":")
+      keyboardLayoutConfig = fmt.Sprintf(`
+ (keyboard-layout
+  (keyboard-layout "%s"
+                   #:options '("%s")))
+`, layout, options)
+    } else {
+      // No options, just layout
+      keyboardLayoutConfig = fmt.Sprintf(`
+ (keyboard-layout (keyboard-layout "%s"))
+`, layout)
+    }
+  }
+  
+  // Build the initrd-modules expression.
+  //
+  // Normally this is just %base-initrd-modules. If GetBuiltInModulesToFilter
+  // ever becomes non-empty (because a kernel really does build one of these in
+  // and Guix would fail to find it), wrap it in a 'remove' instead of emitting
+  // a no-op filter -- an always-false predicate in the generated config reads
+  // like something is being filtered when nothing is.
+  initrdModules := lib.BuildInitrdModulesExpr(lib.GetBuiltInModulesToFilter())
+
+  // Mirror the build-time pin into the installed system.
+  //
+  // The installer pins channels for its own time-machine run, but that pin
+  // lived only on the machine doing the installing. The system it produced
+  // booted knowing about the 'guix' channel and nothing else, so
+  // "guix system reconfigure /etc/config.scm" -- on the very config that built
+  // it -- died with:
+  //
+  //   failed to load '/etc/config.scm': no code for module (nongnu packages linux)
+  //
+  // Observed on hardware 2026-08-02. Emitting the same commit pair into the
+  // generated config makes the installed system self-sufficient: the guix
+  // service writes /etc/guix/channels.scm at activation, so 'guix pull' and
+  // every later reconfigure reproduce the pin instead of jumping to HEAD.
+  //
+  // Built from the lib constants rather than written out here, so there is one
+  // place to move the pin forward. See docs/CHANNEL_PINNING_POLICY.md.
+  channelDefs := fmt.Sprintf(`;; Channels pinned %s, mirrored from the installer into this system.
+;; The guix service writes these to /etc/guix/channels.scm at activation.
+(define %%framework-dual-channels
+  (list (channel
+         (name 'guix)
+         (url "https://git.savannah.gnu.org/git/guix.git")
+         (branch "master")
+         (commit "%s")
+         (introduction
+          (make-channel-introduction
+           "9edb3f66fd807b096b48283debdcddccfea34bad"
+           (openpgp-fingerprint
+            "BBB0 2DDF 2CEA F6A8 0D1D  E643 A2A0 6DF2 A33A 54FA"))))
+        (channel
+         (name 'nonguix)
+         (url "https://gitlab.com/nonguix/nonguix")
+         (branch "master")
+         (commit "%s")
+         (introduction
+          (make-channel-introduction
+           "897c1a470da759236cc11798f4e0a5f7d4d59fbc"
+           (openpgp-fingerprint
+            "2A39 3FFF 68F4 EF7A 3D29  12AF 6F51 20A0 22FB B2D5"))))))
+
+;; The nonguix substitute server's signing key, verbatim from
+;; https://substitutes.nonguix.org/signing-key.pub -- embedded rather than
+;; fetched so the config evaluates on a machine with no network yet.
+(define %%nonguix-signing-key
+  (plain-file "nonguix.pub"
+              "(public-key
+ (ecc
+  (curve Ed25519)
+  (q #C1FD53E5D4CE971933EC50C9F307AE2171A2D3B52C804642A7A35F84F3A4EA98#)
+  )
+ )"))
+`, lib.FrameworkDualPinDate, lib.FrameworkDualGuixCommit, lib.FrameworkDualNonguixCommit)
+
+  // Kernel arguments removed from the template below, and why. These are named
+  // here rather than in the generated config so that grepping a deployed
+  // config.scm for them stays a reliable "this machine is misconfigured" check.
+  //
+  //   nomodeset  Disables kernel modesetting. Contradicts loading amdgpu and
+  //              linux-firmware at all, and leaves an unaccelerated console.
+  //   noapic     Disables the I/O APIC.
+  //   nolapic    Disables the local APIC. Together these force legacy 8259
+  //              interrupt routing, which modern AMD platforms do not reliably
+  //              provide. The internal keyboard is an i8042 "AT Translated Set
+  //              2 keyboard" on IRQ 1, so it would receive no interrupts.
+  //              nolapic also drops the machine to a single core.
+  //   acpi=off   Already removed earlier; broke xhci_hcd USB init.
+  //
+  // All four were workarounds for a boot hang whose actual cause was a channel
+  // pin older than the hardware. That is fixed in lib/common.go, not by
+  // disabling the interrupt controller.
+  //
+  // Do NOT over-attribute to these arguments. When this laptop was actually
+  // observed with a dead console keyboard, its deployed GRUB entry carried only
+  // "quiet" -- none of them had ever reached the machine. Repinning forward to
+  // linux-7.1.5 fixed the keyboard, WiFi, Bluetooth and amdgpu together
+  // (verified on hardware 2026-08-02). Several unrelated-looking hardware
+  // failures on one boot means one cause underneath, not several.
+
+  config := fmt.Sprintf(`;; Framework 13 AMD Dual-Boot - Hardware-Aware Minimal Configuration
+;; Includes kernel, firmware, and initrd modules for Framework 13 AMD hardware
+;; Configured for dual-boot with Pop!_OS (shared EFI partition)
+;; Customize after installation using: guix-customize
+
+(use-modules (gnu)
+             (gnu packages linux)
+             (gnu services dbus)       ;dbus-root-service-type, polkit-service-type
+             (gnu services networking) ;network-manager, wpa-supplicant, ntp
+             (gnu system nss)
+             (guix channels)           ;channel, make-channel-introduction
+             (nongnu packages linux)
+             (nongnu system linux-initrd)
+             (srfi srfi-1))
+
+%s
+;; Pop!_OS chainload entry, emitted only when Pop!_OS is actually installed.
+;;
+;; Decided at CONFIG EVALUATION time, not at boot: stat runs on whichever
+;; machine evaluates this file, so the ESP has to be reachable from here.  That
+;; is a different path depending on when you run:
+;;
+;;   /boot/efi                a running, installed system (guix system reconfigure)
+;;   /mnt/guixroot/boot/efi   the installer, mid "guix system init"
+;;
+;; so both are probed.
+;;
+;; The check FAILS OPEN, and the distinction is not academic.  An ESP is vfat
+;; mounted umask=0077, so only root can stat anything beneath it: file-exists?
+;; answers #f for "not there" and for "you may not look" alike.  reconfigure
+;; and init run as root and see the truth, but a user-level "guix system build"
+;; does not, and would quietly emit a system with no way back to Pop!_OS from
+;; GRUB.  Hence three states rather than two: present and unknown both keep the
+;; entry, only a definite ENOENT drops it.  A spurious entry costs a "file not
+;; found" at the GRUB prompt; a missing one costs the boot menu route to the
+;; other OS, which is the more expensive mistake.
+(define %%popos-boot-loader "/EFI/systemd/systemd-bootx64.efi")
+
+(define %%esp-mount-candidates
+  '("/boot/efi" "/mnt/guixroot/boot/efi" "/mnt/boot/efi"))
+
+(define (popos-loader-state esp)
+  "Return 'present, 'absent, or 'unknown for the Pop!_OS loader under ESP."
+  (catch 'system-error
+    (lambda ()
+      (stat (string-append esp %%popos-boot-loader))
+      'present)
+    (lambda args
+      (if (= (system-error-errno args) ENOENT) 'absent 'unknown))))
+
+(define (popos-menu-entry)
+  (menu-entry
+   (label "Pop!_OS")
+   ;; The ESP is matched by LABEL rather than device path -- partition
+   ;; numbering on a dual-boot disk is whatever the other OS's installer left
+   ;; behind.  GRUB renders this as "search --label" then "chainloader".
+   (device (file-system-label "EFI"))
+   (chain-loader %%popos-boot-loader)))
+
+(define %%popos-menu-entries
+  (let ((states (map popos-loader-state %%esp-mount-candidates)))
+    (cond
+     ((memq 'present states) (list (popos-menu-entry)))
+     ((memq 'unknown states)
+      (format (current-error-port)
+              "note: cannot read the ESP (run as root to check); keeping the Pop!_OS entry~%%")
+      (list (popos-menu-entry)))
+     (else
+      (format (current-error-port)
+              "note: no Pop!_OS boot loader under ~a; omitting its GRUB entry~%%"
+              %%esp-mount-candidates)
+      '()))))
+
+(operating-system
+ (host-name "%s")
+ (timezone "%s")
+ (locale "en_US.utf8")
+%s
+ ;; Linux kernel with proprietary firmware support (from nonguix)
+ ;;
+ ;; microcode-initrd, not base-initrd: it prepends the CPU microcode blob so
+ ;; the AMD update is applied before the kernel proper starts.  It comes from
+ ;; (nongnu system linux-initrd), which this config already imports.  This is
+ ;; also what the previously deployed system on this laptop used, so keeping it
+ ;; means the repo reproduces the configuration that was verified on hardware.
+ (kernel linux)
+ (initrd microcode-initrd)
+ (firmware (list linux-firmware))
+
+ ;; The initrd only has to get us far enough to mount the root filesystem;
+ ;; everything else is udev's job once the real system is up.
+ ;;
+ ;; %%base-initrd-modules already covers this machine: ahci, usb-storage/uas,
+ ;; and -- importantly for a laptop -- usbhid and hid-generic for keyboards
+ ;; during early boot.  We previously prepended three modules here; all three
+ ;; are removed on purpose:
+ ;;   - amdgpu:    not needed to mount root.  Loading the GPU driver from the
+ ;;                initrd also means its firmware must be in the initrd, which
+ ;;                is a second way to fail before there is any console to see
+ ;;                it on.  udev loads it fine later.
+ ;;   - usbhid:    already in %%base-initrd-modules; listing it twice is noise.
+ ;;   - i2c_piix4: SMBus for sensors.  Nothing to do with booting.
+ ;;
+ ;; NVMe note: "nvme" is deliberately absent, matching %%base-initrd-modules.
+ ;; NVMe root works because the driver is built into the kernel rather than
+ ;; loadable.  If a future kernel makes it modular, root will fail to mount and
+ ;; "nvme" must be added here -- see docs/NVME_MODULE_FIX.md.
+ (initrd-modules %s)
+
+ ;; Kernel arguments.  Append to %%default-kernel-arguments rather than
+ ;; replacing it: the default carries modprobe.blacklist=usbmouse,usbkbd, and
+ ;; upstream blacklists usbkbd because it races usbhid (bugs.gnu.org/35574).
+ ;; On a laptop, losing that blacklist is a way to lose your keyboard.
+ ;;
+ ;; Several display/interrupt workarounds that used to live here have been
+ ;; removed -- do not add them back without reading
+ ;; docs/FRAMEWORK_STARTUP_HANG_FIX.md first.
+ (kernel-arguments (append '("loglevel=3") %%default-kernel-arguments))
+
+ (bootloader
+  (bootloader-configuration
+   (bootloader %s)
+   (targets %s)
+   (timeout 5)
+   ;; Chainload Pop!_OS's systemd-boot from Guix's GRUB, so switching back does
+   ;; not require the firmware boot menu.  Guix and Pop!_OS occupy separate
+   ;; directories on the one shared ESP (\EFI\Guix\ and \EFI\systemd\); this
+   ;; hands control to the other bootloader without modifying it.
+   ;;
+   ;;
+   ;; Conditional on Pop!_OS actually being present -- see %%popos-menu-entries
+   ;; above, which resolves to the empty list on a machine without it so GRUB
+   ;; shows only the Guix generations.  This installer also targets Frameworks
+   ;; with no Pop!_OS at all, where an unconditional entry advertises an OS
+   ;; that was never installed.
+   (menu-entries %%popos-menu-entries)))
+ (file-systems
+  (cons*          (file-system
+          (mount-point "/")
+          (device (file-system-label "GUIX_ROOT"))
+          (type "ext4"))
+         (file-system
+          (mount-point "/boot/efi")
+          (device (file-system-label "EFI"))
+          (type "vfat"))
+%s         %%base-file-systems))
+
+ (users (cons* (user-account
+                (name "%s")
+                (comment "%s")
+                (group "users")
+                (home-directory "/home/%s")
+                (supplementary-groups '("wheel" "netdev")))
+               %%base-user-accounts))
+
+ ;; Minimal packages - add more after installation
+ (packages %%base-packages)
+
+ ;; Minimal services PLUS networking.  Add SSH, desktop, etc. after install.
+ ;;
+ ;; Networking is NOT optional here, even though everything else is minimal.
+ ;; This machine's only network interface is the MediaTek MT7925 wireless card
+ ;; (14c3:0717, driver mt7925e); Framework 13 has no built-in ethernet, it uses
+ ;; expansion cards.  %%base-services provides loopback and nothing else, so a
+ ;; system installed without these boots with no way to reach the network --
+ ;; and therefore no way to guix pull and repair itself.  That is a very
+ ;; expensive state to land in on a laptop whose keyboard may also be suspect.
+ ;;
+ ;; dbus and polkit are prerequisites, not extras: network-manager-service-type
+ ;; declares service-extensions onto dbus-root-service-type and
+ ;; polkit-service-type, and Guix aborts the build with "no target of type ..."
+ ;; if either is missing.  %%base-services instantiates neither.  Guix's own
+ ;; %%desktop-services pairs wpa-supplicant with NetworkManager, annotated in
+ ;; gnu/services/desktop.scm as ";needed by NetworkManager".
+ ;;
+ ;; ntp is here because clock skew breaks TLS, which breaks guix pull -- an
+ ;; unpleasant thing to debug on a fresh install with no network.
+ ;;
+ ;; nmcli/nmtui reach PATH automatically; the service extends
+ ;; profile-service-type.  After first boot, run nmtui on the console.
+ ;;
+ ;; NetworkManager carries an explicit DNS block; see the comment on it below.
+ ;;
+ ;; The guix service is reconfigured rather than taken as-is.  Two separate
+ ;; things are wrong with the default on this machine:
+ ;;
+ ;;   channels        %%base-services carries no channel list, so the installed
+ ;;                   system knows only the "guix" channel.  Reconfiguring this
+ ;;                   very config then fails with "no code for module
+ ;;                   (nongnu packages linux)", and a bare "guix pull" would
+ ;;                   silently abandon the pin and jump to HEAD.
+ ;;   substitute-urls Authorizing a signing key and querying a substitute
+ ;;                   server are two different settings.  %%default-substitute-
+ ;;                   urls does not include nonguix, so with the key alone guix
+ ;;                   never asks -- it just compiles Linux from source, which
+ ;;                   is hours of CPU and several GiB of store on a laptop.
+ ;;
+ ;; The console font is likewise overridden rather than added.  This panel is
+ ;; 2256x1504 on a 13.5" diagonal, and %%default-console-font is
+ ;; Unifont-APL8x16 -- roughly 1.5 mm of cap height, which is not readable at
+ ;; laptop distance.  Since the console is where you land when the desktop is
+ ;; not up yet, that matters most exactly when something has gone wrong.
+ (services
+  (append
+   (list ;; NetworkManager with a resolver that survives reconnects.
+         ;;
+         ;; Observed 2026-08-02: after a reboot the machine had connectivity but
+         ;; an unusable /etc/resolv.conf, so "guix pull" died in
+         ;; getaddrinfo: Name or service not known -- which ALSO surfaced as
+         ;; "nonguix untrusted", because a channel introduction is verified
+         ;; against the keyring branch of a repo that could not be cloned.  One
+         ;; fault, two error messages, and the second one sends you chasing
+         ;; signing keys.  Editing /etc/resolv.conf by hand fixes it until the
+         ;; next re-association, when NetworkManager rewrites the file.
+         ;;
+         ;; This machine's ability to repair itself runs entirely through
+         ;; "guix pull", and that needs DNS.  Everything else in this config is
+         ;; minimal; a resolver is not somewhere to be minimal.
+         ;;
+         ;; [global-dns-domain-*] is NetworkManager's own override -- it beats
+         ;; whatever DHCP hands out, for every connection, so it cannot be
+         ;; undone by roaming.  TRADEOFF: that is an override, not a fallback.
+         ;; On a network with split-horizon DNS (corporate, or a home router
+         ;; serving .lan names) internal hostnames will stop resolving.  If you
+         ;; want DHCP's servers back, delete the whole
+         ;; network-manager-configuration record below, leaving the service
+         ;; instantiated with no configuration argument.
+         (service network-manager-service-type
+                  (network-manager-configuration
+                   (extra-configuration-files
+                    (list (list "dns.conf"
+                                (plain-file "nm-global-dns.conf"
+                                            "[global-dns]
+searches=
+
+[global-dns-domain-*]
+servers=9.9.9.9,1.1.1.1
+"))))))
+         (service wpa-supplicant-service-type)
+         (service dbus-root-service-type)
+         (service polkit-service-type)
+         (service ntp-service-type))
+   (modify-services %%base-services
+     ;; Rewrite the font in the tty/font alist that %%base-services already
+     ;; provides, preserving its tty list rather than restating tty1-tty6.
+     ;; This MUST be modify-services, not another (service console-font-...)
+     ;; in the list above: %%base-services already instantiates that type, and
+     ;; a second instance covering the same ttys collides on the shepherd
+     ;; provisions console-font-tty1 .. console-font-tty6.
+     ;;
+     ;; "solar24x32" is a bare name, which is what the service documents
+     ;; ("the name of a font provided by the kbd package"); it resolves to
+     ;; solar24x32.psfu.gz in kbd, the same package the service runs setfont
+     ;; from.  Only two large fonts ship in kbd -- this one and
+     ;; latarcyrheb-sun32.  The Terminus console fonts named in older notes in
+     ;; this repo come from font-terminus, which is NOT installed here; naming
+     ;; one silently leaves the console at the default font.
+     (console-font-service-type
+      config => (map (lambda (tty+font)
+                       (cons (car tty+font) "solar24x32"))
+                     config))
+     (guix-service-type
+      config => (guix-configuration
+                 (inherit config)
+                 (channels %%framework-dual-channels)
+                 (substitute-urls
+                  (cons "https://substitutes.nonguix.org"
+                        %%default-substitute-urls))
+                 (authorized-keys
+                  (cons %%nonguix-signing-key
+                        %%default-authorized-guix-keys))))))))
+`,
+    channelDefs,             // pinned channels + nonguix key definitions
+    state.HostName,          // host-name
+    state.Timezone,          // timezone
+    keyboardLayoutConfig,    // keyboard-layout (conditional)
+    initrdModules,           // initrd-modules expression
+    bootloader,              // bootloader
+    targets,                 // targets
+    dataFS,                  // data filesystem conditional
+    state.UserName,          // name
+    state.FullName,          // comment
+    state.UserName,          // for home-directory
+  )
+
+  return config
+}
+
+

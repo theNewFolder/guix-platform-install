@@ -1,0 +1,15 @@
+[package]
+name = "gips-config"
+version = "2026.9.21"
+edition = "2021"
+build = "build.rs"
+
+[dependencies]
+dirs = "5.0"
+serde = { workspace = true }
+toml = "0.8"
+anyhow = { workspace = true }
+gips-trust = { path = "../../components/gips-trust" }
+
+[dev-dependencies]
+tempfile = "3"

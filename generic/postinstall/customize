@@ -1,0 +1,17 @@
+#!/run/current-system/profile/bin/bash
+# Universal Hardware Post-Install Customization Wrapper
+# Runs the shared Guile Scheme post-installation customization suite
+
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+if [[ -f "$SCRIPT_DIR/../../postinstall/lib.scm" ]]; then
+    exec /run/current-system/profile/bin/guile --no-auto-compile -s "$SCRIPT_DIR/../../cloudzy/postinstall/customize.scm" "$@"
+elif [[ -f "$HOME/guix-customize/customize.scm" ]]; then
+    exec /run/current-system/profile/bin/guile --no-auto-compile -s "$HOME/guix-customize/customize.scm" "$@"
+else
+    echo "[INFO] Launching Guix post-install customization..."
+    echo "Available recipes in ~/guix-customize/recipes/:"
+    ls -1 "$HOME/guix-customize/recipes/" 2>/dev/null || true
+fi

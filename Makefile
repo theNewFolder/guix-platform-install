@@ -1,0 +1,430 @@
+GUILE ?= guile
+
+# Local non-secret resource defaults.  Command-line assignments still win.
+-include .env
+
+# Values loaded from .env must also be visible to the shell scripts invoked by
+# Make.  Command-line overrides retain their usual higher precedence.
+export ORACLE_IMAGE_FILE ORACLE_BUCKET_NAME ORACLE_OBJECT_NAME
+export ORACLE_UPLOAD_PART_MIB
+
+IMAGE_ID ?= $(ORACLE_IMAGE_ID)
+SUBNET_ID ?= $(ORACLE_SUBNET_ID)
+INSTANCE_ID ?= $(ORACLE_INSTANCE_ID)
+EVIDENCE_DIR ?= $(ORACLE_EVIDENCE_DIR)
+
+.PHONY: help dev-help test check manifest dev-test dev-check dev-manifest
+.PHONY: wizard oracle-wizard download ssh oracle-download oracle-ssh personal-setup set-ip
+.PHONY: gips-test gips-rust-test gips-check gips-daemon gips-status ipfs-docker
+.PHONY: gips-bundle gips-install gips-setup gips-hub gips-spoke gips-subscribe gips-start gips-stop gips-push gips-pull
+.PHONY: oracle-help oracle-test oracle-test-all gips-benchmark-report
+.PHONY: oracle-test-capacity oracle-test-image oracle-test-preferences
+.PHONY: oracle-test-validation oracle-auth oracle-inventory
+.PHONY: oracle-instance oracle-evidence oracle-stage0 oracle-stage1
+.PHONY: oracle-run oracle-one-shot oracle-resume-check
+.PHONY: oracle-run-status oracle-logs oracle-collect oracle-stop oracle-cleanup oracle-handoff
+.PHONY: oracle-build-generic oracle-upload-generic oracle-import-generic oracle-timings
+.PHONY: dev-oracle-test dev-oracle-test-all dev-oracle-run
+
+help:
+	@echo "Guix on Oracle - User targets:"
+	@echo "  make wizard             Interactive step-by-step setup wizard"
+	@echo "  make download           Download & verify published generic Guix image"
+	@echo "  make ssh [IP=...] [AGENT=1] Connect to Guix instance (optional SSH agent forwarding)"
+	@echo "  make personal-setup [IP=...] [AGENT=1] Run personal config setup on instance"
+	@echo "  make set-ip IP=...      Update ORACLE_INSTANCE_IP in .env (or 'make set-ip IP=' to clear)"
+	@echo ""
+	@echo "GIPS (P2P Package Substitute Sharing):"
+	@echo "  make gips-bundle        Install complete GIPS tooling bundle into Guix profile"
+	@echo "  make gips-hub           Initialize this machine as the GIPS Hub (builder/publisher)"
+	@echo "  make gips-spoke         Connect this machine as a Spoke: authorize Hub key, start daemons, subscribe (GNS_NAME=$(GNS_NAME))"
+	@echo "  make gips-subscribe     Subscribe this node to a Hub feed (GNS_NAME=...)"
+	@echo "  make gips-setup         Run GIPS post-install configuration wizard"
+	@echo "  make gips-start         Start IPFS and GIPS daemons in background"
+	@echo "  make gips-stop          Stop background IPFS and GIPS daemons"
+	@echo "  make gips-status        Check GIPS daemon and IPFS status"
+	@echo "  make gips-push [GNS_NAME=...] Export profile and publish snapshot to IPFS"
+	@echo "  make gips-pull [MANIFEST=...] Install packages substituting from local GIPS proxy"
+	@echo ""
+	@echo "Repository targets:"
+	@echo "  make test               Run the complete local test suite"
+	@echo "  make check              Run pre-deploy validation and the complete test suite"
+	@echo "  make manifest           Regenerate SOURCE_MANIFEST.txt"
+	@echo "  make gips-test          Run GIPS Guile Scheme test suite"
+	@echo "  make gips-rust-test     Run GIPS Rust workspace test suite"
+	@echo "  make gips-check         Run both Scheme and Rust GIPS test suites"
+	@echo "  make gips-daemon        Start GIPS daemon (gipsd) locally in foreground"
+	@echo "  make ipfs-docker        Run Kubo IPFS daemon via Docker with swarm port 4001"
+	@echo ""
+	@echo "Developer targets:"
+	@echo "  make dev-check          Run pre-deploy validation and test suite"
+	@echo "  make dev-test           Run local test suite"
+	@echo "  make dev-manifest       Regenerate SOURCE_MANIFEST.txt"
+	@echo "  make dev-help           Show all developer & validation targets"
+
+dev-help:
+	@echo "Developer & validation targets:"
+	@echo "  make dev-check            Run pre-deploy validation and test suite"
+	@echo "  make dev-test             Run local test suite"
+	@echo "  make dev-manifest         Regenerate SOURCE_MANIFEST.txt"
+	@echo "  make dev-oracle-test      All offline Oracle test suites"
+	@echo "  make dev-oracle-test-all  All four suites (requires Guix)"
+	@echo "  make dev-oracle-run       Run disposable validation instance"
+	@echo "  make oracle-help          Show full Oracle validation & lifecycle targets"
+
+dev-test test:
+	./run-tests.sh
+
+dev-check check:
+	lib/validate-before-deploy.sh --verbose
+	./run-tests.sh
+
+dev-manifest manifest:
+	./update-manifest.sh
+
+gips-test:
+	$(GUILE) --no-auto-compile -s postinstall/recipes/add/gips.scm --self-test
+	$(GUILE) --no-auto-compile -s postinstall/recipes/add/personal-sync.scm --self-test
+	$(GUILE) --no-auto-compile -s postinstall/tests/test-personal-sync.scm
+	$(GUILE) --no-auto-compile -s gips/test_api.scm
+	$(GUILE) --no-auto-compile -s gips/test_sign.scm
+
+gips-rust-test:
+	@command -v cargo >/dev/null 2>&1 || { echo "cargo is required for Rust tests" >&2; exit 2; }
+	cd gips && cargo test --workspace
+
+gips-check: gips-test
+	@if command -v cargo >/dev/null 2>&1; then \
+		(cd gips && cargo test --workspace); \
+	fi
+
+gips-bundle gips-install:
+	@command -v guix >/dev/null 2>&1 || { echo "guix is required to install the GIPS manifest" >&2; exit 2; }
+	# go-moremath's upstream TestMeanCI uses exact float equality and fails on
+	# aarch64 by a few ulps; skip only that dependency's test phase.
+	guix package --without-tests=go-github-com-aclements-go-moremath -m gips/manifest.scm
+	@echo "[OK] GIPS toolchain bundle installed successfully."
+
+gips-setup:
+	$(GUILE) --no-auto-compile -s postinstall/recipes/add/gips.scm
+
+HUB_KEY ?=
+HUB_KEY_FILE ?=
+
+gips-hub:
+	@mkdir -p "$${XDG_CONFIG_HOME:-$$HOME/.config}/gips"
+	@$(MAKE) gips-start
+	$(GUILE) --no-auto-compile -s postinstall/recipes/add/gips.scm --hub
+
+gips-spoke:
+	@mkdir -p "$${XDG_CONFIG_HOME:-$$HOME/.config}/gips"
+	$(GUILE) --no-auto-compile -s postinstall/recipes/add/gips.scm --spoke \
+		$(if $(strip $(HUB_KEY_FILE)),--hub-key-file='$(HUB_KEY_FILE)',) \
+		$(if $(strip $(HUB_KEY)),--hub-key='$(HUB_KEY)',)
+	@$(MAKE) gips-start
+	@$(MAKE) gips-subscribe GNS_NAME='$(GNS_NAME)'
+
+# Subscribe this node's gipsd to a publisher's feed. Authorizing the Hub's key
+# only says whose signatures to trust; without a subscription the mirror worker
+# has nothing to mirror, gipsd answers 404 for everything, and -- because
+# gips-pull lists ci.guix.gnu.org as a fallback -- installs still succeed, so
+# the Spoke looks healthy while GIPS serves nothing. Runs after gips-start
+# because /subscribe is a daemon endpoint. Fails loudly: a Spoke that did not
+# subscribe is not set up.
+gips-subscribe:
+	@test -n "$(GNS_NAME)" || { echo "[ERROR] GNS_NAME is empty; pass the name the Hub pushes under (make gips-push GNS_NAME=...)" >&2; exit 2; }
+	@i=0; until curl -s -m 2 http://127.0.0.1:8080/status >/dev/null 2>&1; do \
+		i=$$((i+1)); \
+		if [ $$i -ge 30 ]; then echo "[ERROR] gipsd did not answer /status within 30 s; cannot subscribe (log: ~/.config/gips/gipsd.log)" >&2; exit 1; fi; \
+		sleep 1; \
+	done
+	@echo "[INFO] Subscribing to Hub feed '$(GNS_NAME)'..."
+	@if command -v gips >/dev/null 2>&1; then \
+		gips subscribe '$(GNS_NAME)'; \
+	elif command -v cargo >/dev/null 2>&1; then \
+		cd gips && cargo run -q -p gips -- subscribe '$(GNS_NAME)'; \
+	else \
+		echo "[ERROR] 'gips' or 'cargo' required. Run 'make gips-bundle'." >&2; exit 1; \
+	fi
+	@echo "[OK] Subscribed to '$(GNS_NAME)'. The mirror worker checks every 60 s; items appear after it has downloaded and pinned them."
+
+gips-start:
+	@mkdir -p "$${XDG_CONFIG_HOME:-$$HOME/.config}/gips"
+	@if [ ! -f "$${XDG_CONFIG_HOME:-$$HOME/.config}/gips/gipsd.toml" ] || [ ! -f "$${XDG_CONFIG_HOME:-$$HOME/.config}/gips/signing-key.sec" ]; then \
+		echo "[INFO] GIPS configuration or keys missing; initializing defaults..."; \
+		$(GUILE) --no-auto-compile -s postinstall/recipes/add/gips.scm --headless; \
+	fi
+	@if ! command -v ipfs >/dev/null 2>&1; then \
+		echo "[ERROR] 'ipfs' command not found. Run 'make gips-bundle' or 'guix install go-ipfs'." >&2; \
+		exit 1; \
+	fi
+	@if [ ! -d "$${IPFS_PATH:-$$HOME/.ipfs}" ]; then \
+		echo "[INFO] Initializing IPFS repository..."; \
+		ipfs init || true; \
+	fi
+	@if pgrep -x ipfs >/dev/null 2>&1 || curl -s -m 1 http://127.0.0.1:5001/api/v0/id >/dev/null 2>&1; then \
+		echo "[OK] IPFS daemon is already running."; \
+	else \
+		echo "[INFO] Starting IPFS daemon in background..."; \
+		nohup ipfs daemon > "$${XDG_CONFIG_HOME:-$$HOME/.config}/gips/ipfs.log" 2>&1 & \
+		sleep 2; \
+		if pgrep -x ipfs >/dev/null 2>&1 || curl -s -m 2 http://127.0.0.1:5001/api/v0/id >/dev/null 2>&1; then \
+			echo "[OK] IPFS daemon started successfully."; \
+		else \
+			echo "[WARN] IPFS daemon launched (log: ~/.config/gips/ipfs.log)."; \
+		fi; \
+	fi
+	@if pgrep -x gipsd >/dev/null 2>&1 || curl -s -m 1 http://127.0.0.1:8080/status >/dev/null 2>&1; then \
+		echo "[OK] GIPS daemon (gipsd) is already running."; \
+	else \
+		echo "[INFO] Starting GIPS daemon (gipsd) in background..."; \
+		if command -v gipsd >/dev/null 2>&1; then \
+			nohup gipsd --config "$${XDG_CONFIG_HOME:-$$HOME/.config}/gips/gipsd.toml" > "$${XDG_CONFIG_HOME:-$$HOME/.config}/gips/gipsd.log" 2>&1 & \
+		elif command -v cargo >/dev/null 2>&1; then \
+			(cd gips && nohup cargo run -p gipsd -- --config "$${XDG_CONFIG_HOME:-$$HOME/.config}/gips/gipsd.toml" > "$${XDG_CONFIG_HOME:-$$HOME/.config}/gips/gipsd.log" 2>&1 &); \
+		else \
+			echo "[ERROR] Neither 'gipsd' nor 'cargo' found. Run 'make gips-bundle'." >&2; \
+			exit 1; \
+		fi; \
+		sleep 2; \
+		if curl -s -m 2 http://127.0.0.1:8080/status >/dev/null 2>&1; then \
+			echo "[OK] GIPS daemon started successfully on http://127.0.0.1:8080."; \
+		else \
+			echo "[INFO] GIPS daemon starting (log: ~/.config/gips/gipsd.log)."; \
+		fi; \
+	fi
+
+gips-stop:
+	@echo "[INFO] Stopping GIPS daemon and IPFS daemon..."
+	@pkill -x gipsd >/dev/null 2>&1 && echo "[OK] Stopped gipsd." || echo "[INFO] gipsd was not running."
+	@pkill -x ipfs >/dev/null 2>&1 && echo "[OK] Stopped ipfs daemon." || echo "[INFO] ipfs daemon was not running."
+
+GNS_NAME ?= cluster.gnu
+MANIFEST ?= sync-manifest.scm
+
+gips-push:
+	@command -v guix >/dev/null 2>&1 || { echo "guix is required to export and snapshot manifests" >&2; exit 2; }
+	@echo "[INFO] Exporting active Guix profile to $(MANIFEST)..."
+	guix package --export-manifest > $(MANIFEST)
+	@echo "[INFO] Creating GIPS snapshot and publishing to IPFS (GNS: $(GNS_NAME))..."
+	@if command -v gips >/dev/null 2>&1; then \
+		gips snapshot create $(MANIFEST) --gns-name $(GNS_NAME); \
+	elif command -v cargo >/dev/null 2>&1; then \
+		cd gips && cargo run -p gips -- snapshot create ../$(MANIFEST) --gns-name $(GNS_NAME); \
+	else \
+		echo "[ERROR] 'gips' or 'cargo' required. Run 'make gips-bundle'." >&2; exit 1; \
+	fi
+
+gips-pull:
+	@command -v guix >/dev/null 2>&1 || { echo "guix is required to pull packages" >&2; exit 2; }
+	@if [ ! -f "$(MANIFEST)" ]; then \
+		echo "[ERROR] Manifest file '$(MANIFEST)' not found. Specify with MANIFEST=path/to/manifest.scm" >&2; exit 1; \
+	fi
+	@echo "[INFO] Pulling substitutes from local GIPS proxy (http://127.0.0.1:8080)..."
+	guix package -m $(MANIFEST) --substitute-urls="http://127.0.0.1:8080 https://ci.guix.gnu.org"
+
+gips-daemon:
+	@command -v cargo >/dev/null 2>&1 || { echo "cargo is required to run gipsd" >&2; exit 2; }
+	cd gips && cargo run -p gipsd
+
+gips-status:
+	@if [ -f "$${XDG_CONFIG_HOME:-$$HOME/.config}/gips/gipsd.toml" ] || curl -s -m 1 http://127.0.0.1:8080/status >/dev/null 2>&1; then \
+		$(GUILE) --no-auto-compile -s postinstall/recipes/add/gips.scm --status 2>/dev/null || true; \
+	fi
+	@if command -v gips >/dev/null 2>&1; then \
+		gips status; \
+	elif command -v cargo >/dev/null 2>&1; then \
+		(cd gips && cargo run -p gips -- status); \
+	fi
+
+ipfs-docker:
+	@command -v docker >/dev/null 2>&1 || { echo "docker is required to run ipfs container" >&2; exit 2; }
+	docker run -d --name ipfs \
+		--restart unless-stopped \
+		-v ipfs_staging:/export -v ipfs_data:/data/ipfs \
+		-p 4001:4001 -p 4001:4001/udp -p 127.0.0.1:8080:8080 -p 127.0.0.1:5001:5001 \
+		ipfs/kubo:latest
+	@echo "[OK] IPFS (Kubo) container started. Swarm port 4001/tcp+udp and local API 5001 are active."
+
+oracle-help:
+	@echo "Read-only/local targets:"
+	@echo "  make oracle-test          # all offline Oracle suites"
+	@echo "  make oracle-test-all      # all four suites; requires Guix"
+	@echo "  make oracle-test-capacity"
+	@echo "  make oracle-test-image    # requires guix"
+	@echo "  make oracle-test-preferences # requires Guix"
+	@echo "  make oracle-test-validation"
+	@echo "  make oracle-auth"
+	@echo "  make oracle-inventory"
+	@echo "  make oracle-timings       # historical median/p90 durations"
+	@echo "  make oracle-instance      # defaults from .env"
+	@echo "  make oracle-evidence      # defaults from .env"
+	@echo ""
+	@echo "Onboarding & access helpers:"
+	@echo "  make wizard               # interactive step-by-step setup wizard"
+	@echo "  make oracle-download      # download and verify published generic image"
+	@echo "  make oracle-ssh IP=...    # connect to running instance with pre-flight check"
+	@echo ""
+	@echo "Disposable lifecycle targets (create an IN_TEST instance):"
+	@echo "  make oracle-build-generic # local x86_64 QCOW2, resumable container"
+	@echo "  make oracle-upload-generic # verified multipart upload; values from .env"
+	@echo "  make oracle-import-generic # resumable custom-image import and waiter"
+	@echo "  make oracle-stage0        # IMAGE_ID/SUBNET_ID default from .env"
+	@echo "  make oracle-stage1 COMMAND='./run-tests.sh'"
+	@echo "  make oracle-run IMAGE_ID=... SUBNET_ID=... SOURCE=. COMMAND='make check'"
+	@echo "  make oracle-resume-check RUN_DIR=.oracle-validation/runs/..."
+	@echo "  make oracle-run-status RUN_DIR=.oracle-validation/runs/..."
+	@echo "  make oracle-logs RUN_DIR=.oracle-validation/runs/..."
+	@echo "  make oracle-collect RUN_DIR=.oracle-validation/runs/..."
+	@echo "  make oracle-stop RUN_DIR=.oracle-validation/runs/..."
+	@echo "  make oracle-cleanup RUN_DIR=.oracle-validation/runs/..."
+	@echo "  make oracle-handoff RUN_DIR=.oracle-validation/runs/..."
+	@echo ""
+	@echo "There is intentionally no generic destroy target."
+
+oracle-test:
+	$(GUILE) --no-auto-compile -s oracle/tests/test-oracle-capacity.scm
+	$(GUILE) --no-auto-compile -s oracle/tests/test-oracle-validation.scm
+	$(GUILE) --no-auto-compile -s oracle/tests/test-gips-cloud-validation.scm
+	$(GUILE) --no-auto-compile -s oracle/tests/test-gips-benchmark.scm
+
+# Analyse a GIPS benchmark results file (docs/GIPS_BENCHMARK_PROTOCOL.md).
+# Pure Guile: runs on the macOS controller, no guix needed.
+gips-benchmark-report:
+	@test -n "$(RESULTS)" || { echo "usage: make gips-benchmark-report RESULTS=results.tsv" >&2; exit 2; }
+	$(GUILE) --no-auto-compile -s oracle/scripts/gips-benchmark.scm report --in "$(RESULTS)"
+
+oracle-test-all: oracle-test oracle-test-preferences oracle-test-image
+
+oracle-test-capacity:
+	$(GUILE) --no-auto-compile -s oracle/tests/test-oracle-capacity.scm
+
+oracle-test-image:
+	@command -v guix >/dev/null 2>&1 || { echo "guix is required for the Oracle image evaluation suite" >&2; exit 2; }
+	$(GUILE) --no-auto-compile -s oracle/tests/test-oracle-image.scm
+
+oracle-test-preferences:
+	@command -v guix >/dev/null 2>&1 || { echo "guix is required for the Oracle preferences suite" >&2; exit 2; }
+	$(GUILE) --no-auto-compile -s oracle/tests/test-oracle-preferences.scm
+
+oracle-test-validation:
+	$(GUILE) --no-auto-compile -s oracle/tests/test-oracle-validation.scm
+
+oracle-auth:
+	$(GUILE) --no-auto-compile -s oracle/scripts/oci-inspect.scm auth
+
+oracle-inventory:
+	$(GUILE) --no-auto-compile -s oracle/scripts/oci-inspect.scm inventory
+
+oracle-instance:
+	@test -n "$(INSTANCE_ID)" || { echo "INSTANCE_ID is required" >&2; exit 2; }
+	$(GUILE) --no-auto-compile -s oracle/scripts/oci-inspect.scm instance \
+		--instance-id '$(INSTANCE_ID)'
+
+oracle-evidence:
+	@test -n "$(INSTANCE_ID)" || { echo "INSTANCE_ID is required" >&2; exit 2; }
+	@test -n "$(EVIDENCE_DIR)" || { echo "EVIDENCE_DIR is required" >&2; exit 2; }
+	$(GUILE) --no-auto-compile -s oracle/scripts/oci-inspect.scm evidence \
+		--instance-id '$(INSTANCE_ID)' --output-dir '$(EVIDENCE_DIR)'
+
+oracle-build-generic:
+	oracle/scripts/macos/build-generic-image.sh
+
+oracle-upload-generic:
+	@test -n "$(ORACLE_OBJECT_NAME)" || { echo "ORACLE_OBJECT_NAME is required" >&2; exit 2; }
+	oracle/scripts/macos/upload-generic-image.sh
+
+oracle-import-generic:
+	@test -n "$(ORACLE_OBJECT_NAME)" || { echo "ORACLE_OBJECT_NAME is required" >&2; exit 2; }
+	oracle/scripts/run-timed.sh image-import \
+		oracle/scripts/macos/import-generic-image.sh
+
+oracle-timings:
+	oracle/scripts/timing-report.sh
+
+oracle-stage0:
+	@test -n "$(IMAGE_ID)" || { echo "IMAGE_ID is required" >&2; exit 2; }
+	@test -n "$(SUBNET_ID)" || { echo "SUBNET_ID is required" >&2; exit 2; }
+	oracle/scripts/run-timed.sh stage0-total \
+		$(GUILE) --no-auto-compile -s oracle/scripts/05-verify-metadata-ssh.scm \
+		--image-id '$(IMAGE_ID)' --subnet-id '$(SUBNET_ID)' $(YES)
+
+# Reusable non-secret defaults come from .env; command-line assignments still
+# override them for a one-off run.
+SOURCE ?= $(if $(ORACLE_SOURCE),$(ORACLE_SOURCE),.)
+COMMAND ?= $(if $(ORACLE_COMMAND),$(ORACLE_COMMAND),./run-tests.sh)
+
+oracle-stage1:
+	@test -n "$(IMAGE_ID)" || { echo "IMAGE_ID is required" >&2; exit 2; }
+	@test -n "$(SUBNET_ID)" || { echo "SUBNET_ID is required" >&2; exit 2; }
+	oracle/scripts/run-timed.sh stage1-total \
+	$(GUILE) --no-auto-compile -s oracle/scripts/validate.scm start \
+		--image-id '$(IMAGE_ID)' --subnet-id '$(SUBNET_ID)' \
+		--source '$(SOURCE)' --command '$(COMMAND)' $(KEEP) \
+	$(if $(FORCE_DISCONNECT_AFTER),--force-disconnect-after '$(FORCE_DISCONNECT_AFTER)',) $(YES)
+
+# Stable release-facing alias: all cloud inputs and the guest command remain
+# explicit, while the underlying controller retains its bounded one-shot and
+# ownership-gated cleanup behavior.
+oracle-run oracle-one-shot:
+	@test -n "$(IMAGE_ID)" || { echo "IMAGE_ID is required" >&2; exit 2; }
+	@test -n "$(SUBNET_ID)" || { echo "SUBNET_ID is required" >&2; exit 2; }
+	@test -n "$(SOURCE)" || { echo "SOURCE is required" >&2; exit 2; }
+	@test -n "$(COMMAND)" || { echo "COMMAND is required" >&2; exit 2; }
+	oracle/scripts/run-timed.sh oracle-one-shot \
+	$(GUILE) --no-auto-compile -s oracle/scripts/validate.scm start \
+		--image-id '$(IMAGE_ID)' --subnet-id '$(SUBNET_ID)' \
+		--source '$(SOURCE)' --command '$(COMMAND)' $(KEEP) \
+		$(if $(FORCE_DISCONNECT_AFTER),--force-disconnect-after '$(FORCE_DISCONNECT_AFTER)',) $(YES)
+
+# Read-only reminder for a human/operator holding an exact checkpoint.  The
+# actual continuation remains in the controller; this target never guesses or
+# mutates OCI resources.
+oracle-resume-check:
+	@test -n "$(RUN_DIR)" || { echo "RUN_DIR is required" >&2; exit 2; }
+	$(GUILE) --no-auto-compile -s oracle/scripts/validation-lifecycle.scm \
+		status --run-dir '$(RUN_DIR)' --json
+
+oracle-run-status oracle-logs oracle-collect oracle-stop oracle-cleanup oracle-handoff:
+	@test -n "$(RUN_DIR)" || { echo "RUN_DIR is required" >&2; exit 2; }
+	$(GUILE) --no-auto-compile -s oracle/scripts/validation-lifecycle.scm \
+		$(patsubst oracle-run-status,status,$(patsubst oracle-logs,logs,$(patsubst oracle-collect,collect,$(patsubst oracle-stop,stop,$(patsubst oracle-cleanup,cleanup,$(patsubst oracle-handoff,handoff,$@)))))) \
+		--run-dir '$(RUN_DIR)' $(YES)
+
+# Published image download & instance SSH helpers (Go)
+OUTPUT ?= guix-oracle-generic.qcow2
+IP ?= $(ORACLE_INSTANCE_IP)
+KEY ?= $(ORACLE_SSH_KEY)
+
+wizard oracle-wizard:
+	go run ./cmd/oracle-wizard
+
+download oracle-download:
+	go run ./cmd/oracle-download -output "$(OUTPUT)" $(if $(FORCE),-force,)
+
+AGENT_FLAG := $(if $(filter 1 true yes,$(AGENT)$(FORWARD_AGENT)$(ORACLE_FORWARD_AGENT)),-agent,)
+
+ssh oracle-ssh:
+	go run ./cmd/oracle-ssh $(if $(IP),-ip "$(IP)",) $(if $(INSTANCE_ID),-instance-id "$(INSTANCE_ID)",) $(if $(KEY),-key "$(KEY)",) $(AGENT_FLAG)
+
+personal-setup:
+	@test -n "$(IP)" || { echo "IP is required. Set ORACLE_INSTANCE_IP in .env or pass IP=... (e.g. make personal-setup IP=129.159.162.200)" >&2; exit 2; }
+	go run ./cmd/oracle-ssh -ip "$(IP)" $(if $(KEY),-key "$(KEY)",) $(AGENT_FLAG) -t "bash -c 'wget -O ~/.personal-config.scm https://raw.githubusercontent.com/durantschoon/guix-platform-install/main/postinstall/recipes/add/personal-config.scm && guile --no-auto-compile -s ~/.personal-config.scm'"
+
+set-ip:
+	@touch .env
+	@if grep -qE '^#?[[:space:]]*(export[[:space:]]+)?ORACLE_INSTANCE_IP=' .env; then \
+		awk -v new_ip="$(IP)" 'BEGIN{FS=OFS="="} $$1 ~ /^#?[[:space:]]*(export[[:space:]]+)?ORACLE_INSTANCE_IP$$/ { $$0="ORACLE_INSTANCE_IP=" new_ip } { print }' .env > .env.tmp && mv .env.tmp .env; \
+	else \
+		echo "ORACLE_INSTANCE_IP=$(IP)" >> .env; \
+	fi
+	@if [ -n "$(IP)" ]; then \
+		echo "[OK] Updated ORACLE_INSTANCE_IP=$(IP) in .env"; \
+	else \
+		echo "[OK] Cleared ORACLE_INSTANCE_IP in .env"; \
+	fi
+
+# Developer aliases
+dev-oracle-test: oracle-test
+dev-oracle-test-all: oracle-test-all
+dev-oracle-run: oracle-run
